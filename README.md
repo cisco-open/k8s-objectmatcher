@@ -29,6 +29,13 @@ Unfortunately, this solution is not perfect because every k8s object amended wit
 - PodDisruptionBudget
 - Unstructured
 
+### How to use it
+
+```
+objectMatcher := objectmatch.New(logf.NewDelegatingLogger(logf.NullLogger{}))
+objectMatcher.Match(e.ObjectOld, e.ObjectNew)
+```
+
 ## Contributing
 
 If you find this project useful here's how you can help:
