@@ -130,6 +130,16 @@ func (om *objectMatcher) Match(old, new interface{}) (bool, error) {
 			return false, errors.WithStack(err)
 		}
 		return ok, nil
+	case *corev1.PersistentVolumeClaim:
+		oldObject := old.(*corev1.PersistentVolumeClaim)
+		newObject := new.(*corev1.PersistentVolumeClaim)
+
+		m := NewPvcMatcher(om)
+		ok, err := m.Match(oldObject, newObject)
+		if err != nil {
+			return false, errors.WithStack(err)
+		}
+		return ok, nil
 	case *corev1.ConfigMap:
 		oldObject := old.(*corev1.ConfigMap)
 		newObject := new.(*corev1.ConfigMap)
