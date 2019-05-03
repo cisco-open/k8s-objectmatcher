@@ -18,6 +18,7 @@ package objectmatch
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/goph/emperror"
 	corev1 "k8s.io/api/core/v1"
@@ -39,6 +40,42 @@ func (m podMatcher) Match(old, new *corev1.Pod) (bool, error) {
 		ObjectMeta
 		Spec corev1.PodSpec
 	}
+
+	generatedTokenName := ""
+	tmpVolume := []corev1.Volume{}
+	for _, volume := range old.Spec.Volumes {
+		if !strings.HasPrefix(volume.Name, old.Spec.ServiceAccountName + "-token-") {
+			tmpVolume = append(tmpVolume, volume)
+		}
+		generatedTokenName = volume.Name
+	}
+	old.Spec.Volumes = tmpVolume
+
+	tmpInitContainers := []corev1.Container{}
+	for _, initContainer := range old.Spec.InitContainers {
+		tmpVolumeMounts := []corev1.VolumeMount{}
+		for _, volumeMount := range initContainer.VolumeMounts {
+			if volumeMount.Name != generatedTokenName {
+				tmpVolumeMounts = append(tmpVolumeMounts, volumeMount)
+			}
+		}
+		initContainer.VolumeMounts = tmpVolumeMounts
+		tmpInitContainers = append(tmpInitContainers, initContainer)
+	}
+	old.Spec.InitContainers = tmpInitContainers
+
+	tmpContainers := []corev1.Container{}
+	for _, container := range old.Spec.Containers {
+		tmpVolumeMounts := []corev1.VolumeMount{}
+		for _, volumeMount := range container.VolumeMounts {
+			if volumeMount.Name != generatedTokenName {
+				tmpVolumeMounts = append(tmpVolumeMounts, volumeMount)
+			}
+		}
+		container.VolumeMounts = tmpVolumeMounts
+		tmpContainers = append(tmpContainers, container)
+	}
+	old.Spec.Containers = tmpContainers
 
 	oldData, err := json.Marshal(Pod{
 		ObjectMeta: m.objectMatcher.GetObjectMeta(old.ObjectMeta),
