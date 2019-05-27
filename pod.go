@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	v1 "k8s.io/kubernetes/pkg/apis/core/v1"
+
 	"github.com/goph/emperror"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -35,7 +37,13 @@ func NewPodMatcher(objectMatcher ObjectMatcher) *podMatcher {
 }
 
 // Match compares two corev1.Pod objects
-func (m podMatcher) Match(old, new *corev1.Pod) (bool, error) {
+func (m podMatcher) Match(oldOrig, newOrig *corev1.Pod) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+
+	new := newOrig.DeepCopy()
+	v1.SetObjectDefaults_Pod(new)
+
 	type Pod struct {
 		ObjectMeta
 		Spec corev1.PodSpec
