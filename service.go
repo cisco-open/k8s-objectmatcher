@@ -18,7 +18,6 @@ package objectmatch
 
 import (
 	"encoding/json"
-	"reflect"
 
 	"github.com/goph/emperror"
 	corev1 "k8s.io/api/core/v1"
@@ -35,15 +34,32 @@ func NewServiceMatcher(objectMatcher ObjectMatcher) *serviceMatcher {
 }
 
 // Match compares two corev1.Service objects
-func (m serviceMatcher) Match(old, new *corev1.Service) (bool, error) {
+func (m serviceMatcher) Match(oldOrig, newOrig *corev1.Service) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
 	type Service struct {
 		ObjectMeta
 		Spec corev1.ServiceSpec
 	}
 
-	if !reflect.DeepEqual(m.objectMatcher.GetObjectMeta(old.ObjectMeta), m.objectMatcher.GetObjectMeta(new.ObjectMeta)) {
-		return false, nil
+	// NodePort is a generated value, avoid the diff by removing it
+	tmpPorts := []corev1.ServicePort{}
+	for _, port := range old.Spec.Ports {
+		if port.NodePort > 0 {
+			port.NodePort = 0
+			tmpPorts = append(tmpPorts, corev1.ServicePort{
+				Name:       port.Name,
+				Protocol:   port.Protocol,
+				Port:       port.Port,
+				TargetPort: port.TargetPort,
+			})
+		} else {
+			tmpPorts = append(tmpPorts, port)
+		}
 	}
+	old.Spec.Ports = tmpPorts
 
 	oldData, err := json.Marshal(Service{
 		ObjectMeta: m.objectMatcher.GetObjectMeta(old.ObjectMeta),

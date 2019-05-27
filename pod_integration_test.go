@@ -49,7 +49,7 @@ func TestIntegration_Pod(t *testing.T) {
 	for _, test := range tests {
 		existingPod, err := testContext.Client.CoreV1().Pods(test.pod.Namespace).Create(test.pod)
 		defer func() {
-			testContext.Client.CoreV1().Pods("default").Delete(test.pod.Name, &metav1.DeleteOptions{
+			testContext.Client.CoreV1().Pods(test.pod.Namespace).Delete(test.pod.Name, &metav1.DeleteOptions{
 				GracePeriodSeconds: new(int64),
 			})
 		}()
