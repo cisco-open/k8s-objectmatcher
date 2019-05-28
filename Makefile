@@ -1,6 +1,7 @@
 
 all: license fmt vet
 
+.PHONY: license
 license:
 	./scripts/check-header.sh
 
@@ -11,3 +12,6 @@ fmt:
 # Run go vet against code
 vet:
 	go vet ./...
+
+test-integration:
+	go test -integration ./...

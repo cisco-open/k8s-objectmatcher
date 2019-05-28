@@ -17,10 +17,10 @@ limitations under the License.
 package objectmatch
 
 import (
-"encoding/json"
+	"encoding/json"
 
-"github.com/goph/emperror"
-corev1 "k8s.io/api/core/v1"
+	"github.com/goph/emperror"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type pvcMatcher struct {
@@ -70,4 +70,3 @@ func (m pvcMatcher) Match(old, new *corev1.PersistentVolumeClaim) (bool, error) 
 
 	return matched, nil
 }
-
