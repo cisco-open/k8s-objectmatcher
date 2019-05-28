@@ -52,7 +52,7 @@ func (m podMatcher) Match(oldOrig, newOrig *corev1.Pod) (bool, error) {
 	generatedTokenName := ""
 	tmpVolume := []corev1.Volume{}
 	for _, volume := range old.Spec.Volumes {
-		if !strings.HasPrefix(volume.Name, old.Spec.ServiceAccountName + "-token-") {
+		if !strings.HasPrefix(volume.Name, old.Spec.ServiceAccountName+"-token-") {
 			tmpVolume = append(tmpVolume, volume)
 		} else {
 			generatedTokenName = volume.Name

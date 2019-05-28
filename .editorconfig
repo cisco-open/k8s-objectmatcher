@@ -8,6 +8,9 @@ indent_style = space
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+[{*.yml,*.yaml}]
+indent_size = 2
+
 [*.go]
 indent_style = tab
 

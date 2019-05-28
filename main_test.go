@@ -1,3 +1,18 @@
+/*
+Copyright 2019 Banzai Cloud.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package objectmatch
 
 import (
@@ -15,13 +30,12 @@ import (
 )
 
 var (
-	integration = flag.Bool("integration", false, "run integration tests")
-	kubeconfig = flag.String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube/config"), "kubernetes config to use for tests")
-	kubecontext = flag.String("kubecontext", "", "kubernetes context to use in tests")
+	integration   = flag.Bool("integration", false, "run integration tests")
+	kubeconfig    = flag.String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube/config"), "kubernetes config to use for tests")
+	kubecontext   = flag.String("kubecontext", "", "kubernetes context to use in tests")
 	keepnamespace = flag.Bool("keepnamespace", false, "keep the kubernetes namespace that was used for the tests")
-	testContext = &IntegrationTestContext{}
+	testContext   = &IntegrationTestContext{}
 )
-
 
 func TestMain(m *testing.M) {
 
@@ -35,7 +49,7 @@ func TestMain(m *testing.M) {
 
 		config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 			&clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig},
-			&clientcmd.ConfigOverrides{CurrentContext:*kubecontext},
+			&clientcmd.ConfigOverrides{CurrentContext: *kubecontext},
 		).ClientConfig()
 		if err != nil {
 			panic(err.Error())
@@ -62,9 +76,10 @@ func TestMain(m *testing.M) {
 }
 
 type IntegrationTestContext struct {
-	Client kubernetes.Interface
+	Client    kubernetes.Interface
 	Namespace string
 }
+
 func (ctx *IntegrationTestContext) CreateNamespace() error {
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
