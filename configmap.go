@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/core/v1"
 )
 
 type configMapMatcher struct {
@@ -34,7 +35,13 @@ func NewConfigMapMatcher(objectMatcher ObjectMatcher) *configMapMatcher {
 }
 
 // Match compares two corev1.ConfigMap objects
-func (m configMapMatcher) Match(old, new *corev1.ConfigMap) (bool, error) {
+func (m configMapMatcher) Match(oldOrig, newOrig *corev1.ConfigMap) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v1.SetObjectDefaults_ConfigMap(new)
+
 	type ConfigMap struct {
 		ObjectMeta
 		Data       map[string]string `json:"data"`

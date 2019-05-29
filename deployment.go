@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/apps/v1"
 )
 
 type deploymentMatcher struct {
@@ -34,7 +35,13 @@ func NewDeploymentMatcher(objectMatcher ObjectMatcher) *deploymentMatcher {
 }
 
 // Match compares two appsv1.Deployment objects
-func (m deploymentMatcher) Match(old, new *appsv1.Deployment) (bool, error) {
+func (m deploymentMatcher) Match(oldOrig, newOrig *appsv1.Deployment) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v1.SetObjectDefaults_Deployment(new)
+
 	type Deployment struct {
 		ObjectMeta
 		Spec appsv1.DeploymentSpec

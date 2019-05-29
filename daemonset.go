@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/apps/v1"
 )
 
 type daemonSetMatcher struct {
@@ -34,7 +35,12 @@ func NewDaemonSetMatcher(objectMatcher ObjectMatcher) *daemonSetMatcher {
 }
 
 // Match compares two appsv1.ClusterDaemonSet objects
-func (m daemonSetMatcher) Match(old, new *appsv1.DaemonSet) (bool, error) {
+func (m daemonSetMatcher) Match(oldOrig, newOrig *appsv1.DaemonSet) (bool, error) {
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v1.SetObjectDefaults_DaemonSet(new)
+
 	type DaemonSet struct {
 		ObjectMeta
 		Spec appsv1.DaemonSetSpec
