@@ -19,14 +19,19 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
+	"github.com/goph/emperror"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
+	"k8s.io/klog/klogr"
 )
 
 var (
@@ -98,4 +103,160 @@ func (ctx *IntegrationTestContext) DeleteNamespace() error {
 		GracePeriodSeconds: new(int64),
 	})
 	return err
+}
+
+type TestItem struct {
+	name         string
+	object       metav1.Object
+	shouldMatch  bool
+	remoteChange func(interface{})
+	localChange  func(interface{})
+}
+
+func NewTestMatch(name string, object metav1.Object) *TestItem {
+	return &TestItem{
+		name:        name,
+		object:      object,
+		shouldMatch: true,
+	}
+}
+func NewTestDiff(name string, object metav1.Object) *TestItem {
+	return &TestItem{
+		name:        name,
+		object:      object,
+		shouldMatch: false,
+	}
+}
+
+func (t *TestItem) withRemoteChange(extender func(interface{})) *TestItem {
+	t.remoteChange = extender
+	return t
+}
+
+func (t *TestItem) withLocalChange(extender func(interface{})) *TestItem {
+	t.localChange = extender
+	return t
+}
+
+func testMatchOnObject(newObject metav1.Object) error {
+	existing := reflect.New(reflect.TypeOf(newObject)).Elem().Interface().(metav1.Object)
+	var err error
+	deleteOptions := &metav1.DeleteOptions{
+		GracePeriodSeconds: new(int64),
+	}
+	switch newObject.(type) {
+	default:
+		return emperror.With(errors.New("Unsupported type"), "type", reflect.TypeOf(newObject), "object", newObject)
+	case *rbacv1.ClusterRole:
+		existing, err = testContext.Client.RbacV1().ClusterRoles().Create(newObject.(*rbacv1.ClusterRole))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.RbacV1().ClusterRoles().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *rbacv1.ClusterRoleBinding:
+		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(newObject.(*rbacv1.ClusterRoleBinding))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.RbacV1().ClusterRoleBindings().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1.Pod:
+		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(newObject.(*v1.Pod))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1.Service:
+		existing, err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Create(newObject.(*v1.Service))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	}
+
+	matched, err := New(klogr.New()).Match(existing, newObject)
+	if err != nil {
+		return err
+	}
+
+	if !matched {
+		return emperror.With(errors.New("Objects did not match"))
+	}
+
+	return nil
+}
+
+func testMatchOnObjectv2(testItem *TestItem) error {
+	newObject := testItem.object
+	existing := reflect.New(reflect.TypeOf(newObject)).Elem().Interface().(metav1.Object)
+	var err error
+	deleteOptions := &metav1.DeleteOptions{
+		GracePeriodSeconds: new(int64),
+	}
+	switch newObject.(type) {
+	default:
+		return emperror.With(errors.New("Unsupported type"), "type", reflect.TypeOf(newObject), "object", newObject)
+	case *rbacv1.ClusterRole:
+		existing, err = testContext.Client.RbacV1().ClusterRoles().Create(newObject.(*rbacv1.ClusterRole))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.RbacV1().ClusterRoles().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *rbacv1.ClusterRoleBinding:
+		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(newObject.(*rbacv1.ClusterRoleBinding))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.RbacV1().ClusterRoleBindings().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1.Pod:
+		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(newObject.(*v1.Pod))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1.Service:
+		existing, err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Create(newObject.(*v1.Service))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	}
+
+	if testItem.remoteChange != nil {
+		testItem.remoteChange(existing)
+	}
+
+	if testItem.localChange != nil {
+		testItem.localChange(newObject)
+	}
+
+	matched, err := New(klogr.New()).Match(existing, newObject)
+	if err != nil {
+		return err
+	}
+
+	if testItem.shouldMatch && !matched {
+		return emperror.With(errors.New("Objects did not match"))
+	}
+
+	if !testItem.shouldMatch && matched {
+		return emperror.With(errors.New("Objects matched although they should not"))
+	}
+
+	return nil
 }
