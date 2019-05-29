@@ -34,7 +34,11 @@ func NewRoleMatcher(objectMatcher ObjectMatcher) *roleMatcher {
 }
 
 // Match compares two rbacv1.ClusterRole objects
-func (m roleMatcher) Match(old, new *rbacv1.Role) (bool, error) {
+func (m roleMatcher) Match(oldOrig, newOrig *rbacv1.Role) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
 	type Role struct {
 		ObjectMeta
 		Rules []rbacv1.PolicyRule `json:"rules"`

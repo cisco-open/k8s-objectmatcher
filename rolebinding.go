@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	rbacv1 "k8s.io/api/rbac/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/rbac/v1"
 )
 
 type roleBindingMatcher struct {
@@ -34,7 +35,13 @@ func NewRoleBindingMatcher(objectMatcher ObjectMatcher) *roleBindingMatcher {
 }
 
 // Match compares two rbacv1.RoleBinding objects
-func (m roleBindingMatcher) Match(old, new *rbacv1.RoleBinding) (bool, error) {
+func (m roleBindingMatcher) Match(oldOrig, newOrig *rbacv1.RoleBinding) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v1.SetObjectDefaults_RoleBinding(new)
+
 	type RoleBinding struct {
 		ObjectMeta
 		Subjects []rbacv1.Subject `json:"subjects,omitempty"`

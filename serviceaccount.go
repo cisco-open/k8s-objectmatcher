@@ -34,7 +34,11 @@ func NewServiceAccountMatcher(objectMatcher ObjectMatcher) *serviceAccountMatche
 }
 
 // Match compares two corev1.ServiceAccount objects
-func (m serviceAccountMatcher) Match(old, new *corev1.ServiceAccount) (bool, error) {
+func (m serviceAccountMatcher) Match(oldOrig, newOrig *corev1.ServiceAccount) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
 	type ServiceAccount struct {
 		ObjectMeta
 	}
