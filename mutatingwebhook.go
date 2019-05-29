@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	admissionv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	"k8s.io/kubernetes/pkg/apis/admissionregistration/v1beta1"
 )
 
 type mutatingWebhookConfigurationMatcher struct {
@@ -34,7 +35,13 @@ func NewMutatingWebhookConfigurationMatcher(objectMatcher ObjectMatcher) *mutati
 }
 
 // Match compares two admissionv1beta1.MutatingWebhookConfiguration objects
-func (m mutatingWebhookConfigurationMatcher) Match(old, new *admissionv1beta1.MutatingWebhookConfiguration) (bool, error) {
+func (m mutatingWebhookConfigurationMatcher) Match(oldOrig, newOrig *admissionv1beta1.MutatingWebhookConfiguration) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v1beta1.SetObjectDefaults_MutatingWebhookConfiguration(new)
+
 	type MutatingWebhookConfiguration struct {
 		ObjectMeta
 		Webhooks []admissionv1beta1.Webhook `json:"webhooks,omitempty" patchStrategy:"merge" patchMergeKey:"name"`

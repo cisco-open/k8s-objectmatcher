@@ -24,14 +24,14 @@ import (
 
 	"github.com/goph/emperror"
 	"github.com/pkg/errors"
+	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -240,7 +240,14 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 		defer func() {
 			testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
 		}()
-
+	case *admissionregistrationv1beta1.MutatingWebhookConfiguration:
+		existing, err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(newObject.(*admissionregistrationv1beta1.MutatingWebhookConfiguration))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(existing.GetName(), deleteOptions)
+		}()
 	}
 
 	if testItem.remoteChange != nil {
