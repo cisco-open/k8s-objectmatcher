@@ -34,7 +34,13 @@ func NewCRDMatcher(objectMatcher ObjectMatcher) *crdMatcher {
 }
 
 // Match compares two extensionsobj.CustomResourceDefinition objects
-func (m crdMatcher) Match(old, new *extensionsobj.CustomResourceDefinition) (bool, error) {
+func (m crdMatcher) Match(oldOrig, newOrig *extensionsobj.CustomResourceDefinition) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	extensionsobj.SetObjectDefaults_CustomResourceDefinition(new)
+
 	type CRD struct {
 		ObjectMeta
 		Spec extensionsobj.CustomResourceDefinitionSpec

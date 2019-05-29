@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	rbacv1 "k8s.io/api/rbac/v1"
+	kubernetesrbacv1 "k8s.io/kubernetes/pkg/apis/rbac/v1"
 )
 
 type clusterRoleBindingMatcher struct {
@@ -34,7 +35,13 @@ func NewClusterRoleBindingMatcher(objectMatcher ObjectMatcher) *clusterRoleBindi
 }
 
 // Match compares two rbacv1.ClusterRoleBinding objects
-func (m clusterRoleBindingMatcher) Match(old, new *rbacv1.ClusterRoleBinding) (bool, error) {
+func (m clusterRoleBindingMatcher) Match(oldOrig, newOrig *rbacv1.ClusterRoleBinding) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	kubernetesrbacv1.SetObjectDefaults_ClusterRoleBinding(new)
+
 	type ClusterRoleBinding struct {
 		ObjectMeta
 		Subjects []rbacv1.Subject `json:"subjects,omitempty"`

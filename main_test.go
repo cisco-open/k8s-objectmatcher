@@ -24,9 +24,14 @@ import (
 
 	"github.com/goph/emperror"
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -53,19 +58,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if *integration {
-
-		config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-			&clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig},
-			&clientcmd.ConfigOverrides{CurrentContext: *kubecontext},
-		).ClientConfig()
-		if err != nil {
-			panic(err.Error())
-		}
-		testContext.Client, err = kubernetes.NewForConfig(config)
-		if err != nil {
-			panic(err.Error())
-		}
-		err = testContext.CreateNamespace()
+		err := testContext.Setup()
 		if err != nil {
 			panic("Failed to setup test namespace")
 		}
@@ -83,8 +76,9 @@ func TestMain(m *testing.M) {
 }
 
 type IntegrationTestContext struct {
-	Client    kubernetes.Interface
-	Namespace string
+	Client           kubernetes.Interface
+	ExtensionsClient apiextension.Interface
+	Namespace        string
 }
 
 func (ctx *IntegrationTestContext) CreateNamespace() error {
@@ -100,6 +94,30 @@ func (ctx *IntegrationTestContext) CreateNamespace() error {
 	ctx.Namespace = namespace.Name
 	return nil
 }
+
+func (ctx *IntegrationTestContext) Setup() error {
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig},
+		&clientcmd.ConfigOverrides{CurrentContext: *kubecontext},
+	).ClientConfig()
+	if err != nil {
+		return err
+	}
+	ctx.Client, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		return emperror.Wrap(err, "Failed to create kubernetes client")
+	}
+	ctx.ExtensionsClient, err = apiextension.NewForConfig(config)
+	if err != nil {
+		return emperror.Wrap(err, "Failed to create apiextensions client")
+	}
+	err = testContext.CreateNamespace()
+	if err != nil {
+		return emperror.Wrap(err, "Failed to create test namespace")
+	}
+	return err
+}
+
 func (ctx *IntegrationTestContext) DeleteNamespace() error {
 	err := ctx.Client.CoreV1().Namespaces().Delete(ctx.Namespace, &metav1.DeleteOptions{
 		GracePeriodSeconds: new(int64),
@@ -140,64 +158,9 @@ func (t *TestItem) withLocalChange(extender func(interface{})) *TestItem {
 	return t
 }
 
-func testMatchOnObject(newObject metav1.Object) error {
-	existing := reflect.New(reflect.TypeOf(newObject)).Elem().Interface().(metav1.Object)
-	var err error
-	deleteOptions := &metav1.DeleteOptions{
-		GracePeriodSeconds: new(int64),
-	}
-	switch newObject.(type) {
-	default:
-		return emperror.With(errors.New("Unsupported type"), "type", reflect.TypeOf(newObject), "object", newObject)
-	case *rbacv1.ClusterRole:
-		existing, err = testContext.Client.RbacV1().ClusterRoles().Create(newObject.(*rbacv1.ClusterRole))
-		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
-		}
-		defer func() {
-			testContext.Client.RbacV1().ClusterRoles().Delete(existing.GetName(), deleteOptions)
-		}()
-	case *rbacv1.ClusterRoleBinding:
-		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(newObject.(*rbacv1.ClusterRoleBinding))
-		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
-		}
-		defer func() {
-			testContext.Client.RbacV1().ClusterRoleBindings().Delete(existing.GetName(), deleteOptions)
-		}()
-	case *v1.Pod:
-		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(newObject.(*v1.Pod))
-		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
-		}
-		defer func() {
-			testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
-		}()
-	case *v1.Service:
-		existing, err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Create(newObject.(*v1.Service))
-		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
-		}
-		defer func() {
-			testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
-		}()
-	}
-
-	matched, err := New(klogr.New()).Match(existing, newObject)
-	if err != nil {
-		return err
-	}
-
-	if !matched {
-		return emperror.With(errors.New("Objects did not match"))
-	}
-
-	return nil
-}
-
 func testMatchOnObjectv2(testItem *TestItem) error {
 	newObject := testItem.object
-	existing := reflect.New(reflect.TypeOf(newObject)).Elem().Interface().(metav1.Object)
+	var existing metav1.Object
 	var err error
 	deleteOptions := &metav1.DeleteOptions{
 		GracePeriodSeconds: new(int64),
@@ -237,6 +200,47 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 		defer func() {
 			testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
 		}()
+	case *v1.ConfigMap:
+		existing, err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Create(newObject.(*v1.ConfigMap))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1beta1.CustomResourceDefinition:
+		existing, err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newObject.(*v1beta1.CustomResourceDefinition))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *appsv1.DaemonSet:
+		existing, err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Create(newObject.(*appsv1.DaemonSet))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *appsv1.Deployment:
+		existing, err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Create(newObject.(*appsv1.Deployment))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v2beta1.HorizontalPodAutoscaler:
+		existing, err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(newObject.(*v2beta1.HorizontalPodAutoscaler))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+
 	}
 
 	if testItem.remoteChange != nil {
@@ -261,4 +265,17 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 	}
 
 	return nil
+}
+
+func standardObjectMeta() metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		GenerateName: "test-",
+		Namespace:    testContext.Namespace,
+	}
+}
+
+func metaWithLabels(labels map[string]string) metav1.ObjectMeta {
+	meta := standardObjectMeta()
+	meta.Labels = labels
+	return meta
 }

@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	autoscalev2beta1 "k8s.io/api/autoscaling/v2beta1"
+	"k8s.io/kubernetes/pkg/apis/autoscaling/v2beta1"
 )
 
 type horizontalPodAutoscalerMatcher struct {
@@ -34,7 +35,13 @@ func NewHorizontalPodAutoscalerMatcher(objectMatcher ObjectMatcher) *horizontalP
 }
 
 // Match compares two autoscalev2beta1.HorizontalPodAutoscaler objects
-func (m horizontalPodAutoscalerMatcher) Match(old, new *autoscalev2beta1.HorizontalPodAutoscaler) (bool, error) {
+func (m horizontalPodAutoscalerMatcher) Match(oldOrig, newOrig *autoscalev2beta1.HorizontalPodAutoscaler) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v2beta1.SetObjectDefaults_HorizontalPodAutoscaler(new)
+
 	type HorizontalPodAutoscaler struct {
 		ObjectMeta
 		Spec autoscalev2beta1.HorizontalPodAutoscalerSpec
