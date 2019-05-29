@@ -35,6 +35,7 @@ func NewPodDisruptionBudgetMatcher(objectMatcher ObjectMatcher) *podDisruptionBu
 
 // Match compares two autoscalev2beta1.HorizontalPodAutoscaler objects
 func (m podDisruptionBudgetMatcher) Match(old, new *policyv1beta1.PodDisruptionBudget) (bool, error) {
+
 	type PodDisruptionBudgetMatcher struct {
 		ObjectMeta
 		Spec policyv1beta1.PodDisruptionBudgetSpec

@@ -23,9 +23,13 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
+	v1beta12 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	//"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -93,8 +97,23 @@ func TestIntegration(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Hostname = "changed on the server"
 			}),
+		NewTestMatch("serviceaccount matches with original",
+			&v1.ServiceAccount{
+				ObjectMeta: standardObjectMeta(),
+			}),
 		NewTestMatch("clusterrole matches with original",
 			&rbacv1.ClusterRole{
+				ObjectMeta: standardObjectMeta(),
+				Rules: []rbacv1.PolicyRule{
+					{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"*"},
+						Resources: []string{"configmaps"},
+					},
+				},
+			}),
+		NewTestMatch("role matches with original",
+			&rbacv1.Role{
 				ObjectMeta: standardObjectMeta(),
 				Rules: []rbacv1.PolicyRule{
 					{
@@ -118,6 +137,23 @@ func TestIntegration(t *testing.T) {
 				RoleRef: rbacv1.RoleRef{
 					APIGroup: "rbac.authorization.k8s.io",
 					Kind:     "ClusterRole",
+					Name:     "test",
+				},
+			}),
+		NewTestMatch("rolebinding matches with original",
+			&rbacv1.RoleBinding{
+				ObjectMeta: standardObjectMeta(),
+				Subjects: []rbacv1.Subject{
+					{
+						Kind:      "ServiceAccount",
+						APIGroup:  "",
+						Name:      "test",
+						Namespace: "test",
+					},
+				},
+				RoleRef: rbacv1.RoleRef{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "Role",
 					Name:     "test",
 				},
 			}),
@@ -260,6 +296,37 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
+		NewTestMatch("pdb match",
+			&v1beta12.PodDisruptionBudget{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1beta12.PodDisruptionBudgetSpec{
+					MinAvailable: intstrRef(intstr.FromInt(1)),
+				},
+			}),
+		NewTestMatch("pvc match",
+			&v1.PersistentVolumeClaim{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PersistentVolumeClaimSpec{
+					AccessModes: []v1.PersistentVolumeAccessMode{
+						v1.ReadWriteOnce,
+					},
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							"storage": resource.MustParse("1G"),
+						},
+					},
+				},
+			}),
+		//NewTestMatch("unstructured match", &unstructured.Unstructured{
+		//	Object: map[string]interface{}{
+		//		"metadata": map[string]interface{}{
+		//			"name": "value",
+		//		},
+		//	},
+		//}).withGroupVersionResource(&schema.GroupVersionResource{
+		//	Version:  "v1",
+		//	Resource: "serviceaccounts",
+		//}),
 	}
 	for _, test := range tests {
 		err := testMatchOnObjectv2(test)
@@ -275,4 +342,8 @@ func int32ref(x int32) *int32 {
 
 func strRef(s string) *string {
 	return &s
+}
+
+func intstrRef(i intstr.IntOrString) *intstr.IntOrString {
+	return &i
 }

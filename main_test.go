@@ -28,10 +28,14 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -77,6 +81,7 @@ func TestMain(m *testing.M) {
 
 type IntegrationTestContext struct {
 	Client           kubernetes.Interface
+	DynamicClient    dynamic.Interface
 	ExtensionsClient apiextension.Interface
 	Namespace        string
 }
@@ -107,6 +112,10 @@ func (ctx *IntegrationTestContext) Setup() error {
 	if err != nil {
 		return emperror.Wrap(err, "Failed to create kubernetes client")
 	}
+	ctx.DynamicClient, err = dynamic.NewForConfig(config)
+	if err != nil {
+		return emperror.Wrap(err, "Failed to create dynamic client")
+	}
 	ctx.ExtensionsClient, err = apiextension.NewForConfig(config)
 	if err != nil {
 		return emperror.Wrap(err, "Failed to create apiextensions client")
@@ -129,6 +138,7 @@ type TestItem struct {
 	name         string
 	object       metav1.Object
 	shouldMatch  bool
+	gvr          *schema.GroupVersionResource
 	remoteChange func(interface{})
 	localChange  func(interface{})
 }
@@ -158,6 +168,11 @@ func (t *TestItem) withLocalChange(extender func(interface{})) *TestItem {
 	return t
 }
 
+func (t *TestItem) withGroupVersionResource(gvr *schema.GroupVersionResource) *TestItem {
+	t.gvr = gvr
+	return t
+}
+
 func testMatchOnObjectv2(testItem *TestItem) error {
 	newObject := testItem.object
 	var existing metav1.Object
@@ -176,6 +191,14 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 		defer func() {
 			testContext.Client.RbacV1().ClusterRoles().Delete(existing.GetName(), deleteOptions)
 		}()
+	case *rbacv1.Role:
+		existing, err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Create(newObject.(*rbacv1.Role))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
 	case *rbacv1.ClusterRoleBinding:
 		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(newObject.(*rbacv1.ClusterRoleBinding))
 		if err != nil {
@@ -183,6 +206,14 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 		}
 		defer func() {
 			testContext.Client.RbacV1().ClusterRoleBindings().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *rbacv1.RoleBinding:
+		existing, err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Create(newObject.(*rbacv1.RoleBinding))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
 		}()
 	case *v1.Pod:
 		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(newObject.(*v1.Pod))
@@ -247,6 +278,38 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 		}
 		defer func() {
 			testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(existing.GetName(), deleteOptions)
+		}()
+	case *policyv1beta1.PodDisruptionBudget:
+		existing, err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Create(newObject.(*policyv1beta1.PodDisruptionBudget))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1.PersistentVolumeClaim:
+		existing, err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Create(newObject.(*v1.PersistentVolumeClaim))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *v1.ServiceAccount:
+		existing, err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Create(newObject.(*v1.ServiceAccount))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+		}()
+	case *unstructured.Unstructured:
+		existing, err = testContext.DynamicClient.Resource(*testItem.gvr).Create(newObject.(*unstructured.Unstructured), metav1.CreateOptions{})
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			testContext.DynamicClient.Resource(*testItem.gvr).Delete(existing.GetName(), deleteOptions)
 		}()
 	}
 

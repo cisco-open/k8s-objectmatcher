@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/core/v1"
 )
 
 type pvcMatcher struct {
@@ -34,7 +35,13 @@ func NewPvcMatcher(objectMatcher ObjectMatcher) *pvcMatcher {
 }
 
 // Match compares two corev1.PersistentVolumeClaim objects
-func (m pvcMatcher) Match(old, new *corev1.PersistentVolumeClaim) (bool, error) {
+func (m pvcMatcher) Match(oldOrig, newOrig *corev1.PersistentVolumeClaim) (bool, error) {
+
+	old := oldOrig.DeepCopy()
+	new := newOrig.DeepCopy()
+
+	v1.SetObjectDefaults_PersistentVolumeClaim(new)
+
 	type Pvc struct {
 		ObjectMeta
 		Spec corev1.PersistentVolumeClaimSpec
