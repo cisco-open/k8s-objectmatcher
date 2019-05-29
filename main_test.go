@@ -44,11 +44,13 @@ var (
 
 func TestMain(m *testing.M) {
 
-	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
-	klog.InitFlags(klogFlags)
-	klogFlags.Set("v", "3")
-
 	flag.Parse()
+
+	if testing.Verbose() {
+		klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
+		klog.InitFlags(klogFlags)
+		klogFlags.Set("v", "3")
+	}
 
 	if *integration {
 
