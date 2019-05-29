@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/goph/emperror"
+	admregv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
@@ -217,18 +218,48 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
-		NewTestMatch("hpa match", &v2beta1.HorizontalPodAutoscaler{
-			ObjectMeta: standardObjectMeta(),
-			Spec: v2beta1.HorizontalPodAutoscalerSpec{
-				ScaleTargetRef: v2beta1.CrossVersionObjectReference{
-					Kind:       "Deployment",
-					Name:       "test",
-					APIVersion: "apps/v1",
+		NewTestMatch("hpa match",
+			&v2beta1.HorizontalPodAutoscaler{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v2beta1.HorizontalPodAutoscalerSpec{
+					ScaleTargetRef: v2beta1.CrossVersionObjectReference{
+						Kind:       "Deployment",
+						Name:       "test",
+						APIVersion: "apps/v1",
+					},
+					MinReplicas: int32ref(1),
+					MaxReplicas: 2,
 				},
-				MinReplicas: int32ref(1),
-				MaxReplicas: 2,
-			},
-		}),
+			}),
+		NewTestMatch("mutating webhook configuration",
+			&admregv1beta1.MutatingWebhookConfiguration{
+				ObjectMeta: standardObjectMeta(),
+				Webhooks: []admregv1beta1.Webhook{
+					{
+						Name: "a.b.c",
+						ClientConfig: admregv1beta1.WebhookClientConfig{
+							Service: &admregv1beta1.ServiceReference{
+								Name:      "test",
+								Namespace: testContext.Namespace,
+								Path:      strRef("/inject"),
+							},
+							CABundle: nil,
+						},
+						Rules: []admregv1beta1.RuleWithOperations{
+							{
+								Operations: []admregv1beta1.OperationType{
+									admregv1beta1.Create,
+								},
+								Rule: admregv1beta1.Rule{
+									Resources:   []string{"pods"},
+									APIGroups:   []string{""},
+									APIVersions: []string{"*"},
+								},
+							},
+						},
+					},
+				},
+			}),
 	}
 	for _, test := range tests {
 		err := testMatchOnObjectv2(test)
@@ -240,4 +271,8 @@ func TestIntegration(t *testing.T) {
 
 func int32ref(x int32) *int32 {
 	return &x
+}
+
+func strRef(s string) *string {
+	return &s
 }
