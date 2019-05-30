@@ -61,9 +61,9 @@ func (m podMatcher) Match(oldOrig, newOrig *corev1.Pod) (bool, error) {
 	old.Spec.Volumes = tmpVolume
 
 	// EnableServiceLinks was not present before 1.13, we need to ignore it if its not set
-	if oldOrig.Spec.EnableServiceLinks == nil && newOrig.Spec.EnableServiceLinks == nil {
-		new.Spec.EnableServiceLinks = nil
-	}
+	//if oldOrig.Spec.EnableServiceLinks == nil && newOrig.Spec.EnableServiceLinks == nil {
+	//	new.Spec.EnableServiceLinks = nil
+	//}
 
 	tmpInitContainers := []corev1.Container{}
 	for _, initContainer := range old.Spec.InitContainers {
