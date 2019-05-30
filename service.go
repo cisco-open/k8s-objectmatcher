@@ -21,6 +21,7 @@ import (
 
 	"github.com/goph/emperror"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/core/v1"
 )
 
 type serviceMatcher struct {
@@ -38,6 +39,8 @@ func (m serviceMatcher) Match(oldOrig, newOrig *corev1.Service) (bool, error) {
 
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
+
+	v1.SetObjectDefaults_Service(new)
 
 	type Service struct {
 		ObjectMeta

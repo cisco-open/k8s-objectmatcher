@@ -260,6 +260,22 @@ func TestIntegration(t *testing.T) {
 					Type: v1.ServiceTypeLoadBalancer,
 				},
 			}),
+		NewTestMatch("service matches with original even if defaults are not set",
+			&v1.Service{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{
+						{
+							Name: "http",
+							Port: 80,
+						},
+					},
+					Selector: map[string]string{
+						"app": "test",
+					},
+					Type: v1.ServiceTypeLoadBalancer,
+				},
+			}),
 		NewTestMatch("configmap match",
 			&v1.ConfigMap{
 				ObjectMeta: standardObjectMeta(),
