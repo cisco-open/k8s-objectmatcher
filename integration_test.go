@@ -276,6 +276,43 @@ func TestIntegration(t *testing.T) {
 					Type: v1.ServiceTypeLoadBalancer,
 				},
 			}),
+		NewTestMatch("service matches with original even if nodeport is set remotely",
+			&v1.Service{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{
+						{
+							Name: "http",
+							Port: 80,
+						},
+					},
+					Selector: map[string]string{
+						"app": "test",
+					},
+					Type: v1.ServiceTypeLoadBalancer,
+				},
+			}).
+			withRemoteChange(func(a interface{}) {
+				b := a.(*v1.Service)
+				b.Spec.Ports[0].NodePort = 32020
+			}),
+		NewTestMatch("service sometimes specifies nodeport locally as well",
+			&v1.Service{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{
+						{
+							Name:     "http",
+							Port:     80,
+							NodePort: 32020,
+						},
+					},
+					Selector: map[string]string{
+						"app": "test",
+					},
+					Type: v1.ServiceTypeLoadBalancer,
+				},
+			}),
 		NewTestMatch("configmap match",
 			&v1.ConfigMap{
 				ObjectMeta: standardObjectMeta(),

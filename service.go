@@ -47,10 +47,10 @@ func (m serviceMatcher) Match(oldOrig, newOrig *corev1.Service) (bool, error) {
 		Spec corev1.ServiceSpec
 	}
 
-	// NodePort is a generated value, avoid the diff by removing it
+	// NodePort can be a generated value, avoid the diff by removing it if so
 	tmpPorts := []corev1.ServicePort{}
-	for _, port := range old.Spec.Ports {
-		if port.NodePort > 0 {
+	for i, port := range old.Spec.Ports {
+		if len(newOrig.Spec.Ports) > i && newOrig.Spec.Ports[i].NodePort == 0 && port.NodePort > 0 {
 			port.NodePort = 0
 			tmpPorts = append(tmpPorts, corev1.ServicePort{
 				Name:       port.Name,
