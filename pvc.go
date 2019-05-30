@@ -47,6 +47,10 @@ func (m pvcMatcher) Match(oldOrig, newOrig *corev1.PersistentVolumeClaim) (bool,
 		Spec corev1.PersistentVolumeClaimSpec
 	}
 
+	if old.Spec.VolumeMode == nil && newOrig.Spec.VolumeMode == nil {
+		new.Spec.VolumeMode = nil
+	}
+
 	delete(new.ObjectMeta.Annotations, "volume.beta.kubernetes.io/storage-provisioner")
 	delete(new.ObjectMeta.Annotations, "pv.kubernetes.io/bind-completed")
 	delete(new.ObjectMeta.Annotations, "pv.kubernetes.io/bound-by-controller")

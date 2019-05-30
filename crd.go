@@ -41,6 +41,11 @@ func (m crdMatcher) Match(oldOrig, newOrig *extensionsobj.CustomResourceDefiniti
 
 	extensionsobj.SetObjectDefaults_CustomResourceDefinition(new)
 
+	// Spec.Conversion was introduced in 1.13
+	if old.Spec.Conversion == nil && newOrig.Spec.Conversion == nil {
+		new.Spec.Conversion = nil
+	}
+
 	type CRD struct {
 		ObjectMeta
 		Spec extensionsobj.CustomResourceDefinitionSpec

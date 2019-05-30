@@ -16,6 +16,7 @@ limitations under the License.
 package objectmatch
 
 import (
+	"log"
 	"testing"
 
 	"github.com/goph/emperror"
@@ -50,6 +51,90 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
+			}),
+		NewTestDiff("pod does not match when a slice item gets removed",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Containers[0].Command = []string{"1"}
+			}),
+		NewTestDiff("pod does not match when a slice item gets added",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Containers[0].Command = []string{"1", "2", "3"}
+			}),
+		NewTestDiff("pod does not match when a field shozuld be removed",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:  "test-container",
+							Image: "test-image",
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Containers[0].Command = []string{"1", "2", "3"}
+			}),
+		NewTestDiff("pod does not match when a field gets removed locally, but exists remotely",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Containers[0].Command = nil
+			}),
+		NewTestDiff("pod does not match when a field gets removed remotely, but exists locally",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Containers[0].Command = nil
 			}),
 		NewTestDiff("pod does not match when there is a remote change on a field (Spec.Hostname) that EXISTS in the local object",
 			&v1.Pod{
@@ -329,9 +414,12 @@ func TestIntegration(t *testing.T) {
 		//}),
 	}
 	for _, test := range tests {
+		if testing.Verbose() {
+			log.Printf("> %s", test.name)
+		}
 		err := testMatchOnObjectv2(test)
 		if err != nil {
-			t.Fatalf("Test %s failed: %s %s", test.name, err, emperror.Context(err))
+			t.Errorf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
 		}
 	}
 }
