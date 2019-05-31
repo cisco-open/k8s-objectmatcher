@@ -36,7 +36,6 @@ func NewMutatingWebhookConfigurationMatcher(objectMatcher ObjectMatcher) *mutati
 
 // Match compares two admissionv1beta1.MutatingWebhookConfiguration objects
 func (m mutatingWebhookConfigurationMatcher) Match(oldOrig, newOrig *admissionv1beta1.MutatingWebhookConfiguration) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 
@@ -82,24 +81,9 @@ func nullUnsupportedFields(oldWebhooks, newWebhooks []admissionv1beta1.Webhook, 
 		nwh := getWebhookByName(wh.Name, newWebhooks)
 		owh := getWebhookByName(wh.Name, oldWebhooks)
 		if nwh != nil && owh != nil {
-			//if nwh.AdmissionReviewVersions == nil && owh.AdmissionReviewVersions == nil {
-			//	newWebhooksWithDefaults[i].AdmissionReviewVersions = nil
-			//}
-			//if nwh.TimeoutSeconds == nil && owh.TimeoutSeconds == nil {
-			//	newWebhooksWithDefaults[i].TimeoutSeconds = nil
-			//}
 			if nwh.SideEffects == nil && owh.SideEffects == nil {
 				newWebhooksWithDefaults[i].SideEffects = nil
 			}
-			//if nwh.Rules != nil && owh.Rules != nil {
-			//	for j, r := range owh.Rules {
-			//		if r.Scope == nil && len(nwh.Rules) > j {
-			//			if nwh.Rules[j].Scope == nil {
-			//				newWebhooksWithDefaults[i].Rules[j].Scope = nil
-			//			}
-			//		}
-			//	}
-			//}
 		}
 	}
 }

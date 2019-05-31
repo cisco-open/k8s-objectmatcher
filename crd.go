@@ -35,7 +35,6 @@ func NewCRDMatcher(objectMatcher ObjectMatcher) *crdMatcher {
 
 // Match compares two extensionsobj.CustomResourceDefinition objects
 func (m crdMatcher) Match(oldOrig, newOrig *extensionsobj.CustomResourceDefinition) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

@@ -36,7 +36,6 @@ func NewClusterRoleBindingMatcher(objectMatcher ObjectMatcher) *clusterRoleBindi
 
 // Match compares two rbacv1.ClusterRoleBinding objects
 func (m clusterRoleBindingMatcher) Match(oldOrig, newOrig *rbacv1.ClusterRoleBinding) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

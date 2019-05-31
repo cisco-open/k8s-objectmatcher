@@ -36,7 +36,6 @@ func NewRoleBindingMatcher(objectMatcher ObjectMatcher) *roleBindingMatcher {
 
 // Match compares two rbacv1.RoleBinding objects
 func (m roleBindingMatcher) Match(oldOrig, newOrig *rbacv1.RoleBinding) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

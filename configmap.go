@@ -36,7 +36,6 @@ func NewConfigMapMatcher(objectMatcher ObjectMatcher) *configMapMatcher {
 
 // Match compares two corev1.ConfigMap objects
 func (m configMapMatcher) Match(oldOrig, newOrig *corev1.ConfigMap) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

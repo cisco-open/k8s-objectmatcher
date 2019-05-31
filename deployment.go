@@ -36,7 +36,6 @@ func NewDeploymentMatcher(objectMatcher ObjectMatcher) *deploymentMatcher {
 
 // Match compares two appsv1.Deployment objects
 func (m deploymentMatcher) Match(oldOrig, newOrig *appsv1.Deployment) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 
