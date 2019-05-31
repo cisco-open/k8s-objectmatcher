@@ -109,28 +109,28 @@ jobs:
           key: gomod-v2-{{ .Branch }}-{{ checksum "go.sum" }}
           paths:
             - /go/pkg/mod
-#
-#      - restore_cache:
-#          name: Restore license cache
-#          keys:
-#            - licensei-v2-{{ .Branch }}-{{ checksum "go.sum" }}
-#            - licensei-v2-{{ .Branch }}
-#            - licensei-v2-master
-#            - licensei-v2
-#
-#      - run:
-#          name: Download license information for dependencies
-#          command: make license-cache
-#
-#      - save_cache:
-#          name: Save license cache
-#          key: licensei-v2-{{ .Branch }}-{{ checksum "go.sum" }}
-#          paths:
-#            - .licensei.cache
-#
-#      - run:
-#          name: Check dependency licenses
-#          command: make license-check
+
+      - restore_cache:
+          name: Restore license cache
+          keys:
+            - licensei-v2-{{ .Branch }}-{{ checksum "go.sum" }}
+            - licensei-v2-{{ .Branch }}
+            - licensei-v2-master
+            - licensei-v2
+
+      - run:
+          name: Download license information for dependencies
+          command: make license-cache
+
+      - save_cache:
+          name: Save license cache
+          key: licensei-v2-{{ .Branch }}-{{ checksum "go.sum" }}
+          paths:
+            - .licensei.cache
+
+      - run:
+          name: Check dependency licenses
+          command: make license-check
 
       - run:
           name: Run verification
