@@ -7,4 +7,6 @@
 !/.idea/modules.xml
 !/.idea/runConfigurations/
 !/.idea/scopes/
-vendor
+/vendor/
+/bin/
+/.licensei.cache
