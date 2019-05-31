@@ -38,7 +38,6 @@ func NewPodMatcher(objectMatcher ObjectMatcher) *podMatcher {
 
 // Match compares two corev1.Pod objects
 func (m podMatcher) Match(oldOrig, newOrig *corev1.Pod) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 
 	new := newOrig.DeepCopy()

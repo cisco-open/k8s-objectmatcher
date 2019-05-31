@@ -36,7 +36,6 @@ func NewPvcMatcher(objectMatcher ObjectMatcher) *pvcMatcher {
 
 // Match compares two corev1.PersistentVolumeClaim objects
 func (m pvcMatcher) Match(oldOrig, newOrig *corev1.PersistentVolumeClaim) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

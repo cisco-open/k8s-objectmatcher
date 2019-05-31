@@ -52,7 +52,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-
 	flag.Parse()
 
 	if testing.Verbose() {
@@ -179,7 +178,7 @@ func (t *TestItem) withIgnoreVersions(v []string) *TestItem {
 	return t
 }
 
-func testMatchOnObjectv2(testItem *TestItem) error {
+func testMatchOnObject(testItem *TestItem) error {
 	newObject := testItem.object
 	var existing metav1.Object
 	var err error
@@ -310,7 +309,8 @@ func testMatchOnObjectv2(testItem *TestItem) error {
 			testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
 		}()
 	case *unstructured.Unstructured:
-		existing, err = testContext.DynamicClient.Resource(*testItem.gvr).Create(newObject.(*unstructured.Unstructured), metav1.CreateOptions{})
+		existing, err = testContext.DynamicClient.Resource(*testItem.gvr).Namespace(testContext.Namespace).
+			Create(newObject.(*unstructured.Unstructured), metav1.CreateOptions{})
 		if err != nil {
 			return emperror.WrapWith(err, "failed to create object", "object", newObject)
 		}

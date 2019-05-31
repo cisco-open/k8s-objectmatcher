@@ -31,8 +31,8 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	//"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -474,16 +474,16 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
-		//NewTestMatch("unstructured match", &unstructured.Unstructured{
-		//	Object: map[string]interface{}{
-		//		"metadata": map[string]interface{}{
-		//			"name": "value",
-		//		},
-		//	},
-		//}).withGroupVersionResource(&schema.GroupVersionResource{
-		//	Version:  "v1",
-		//	Resource: "serviceaccounts",
-		//}),
+		NewTestMatch("unstructured match", &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"name": "value",
+				},
+			},
+		}).withGroupVersionResource(&schema.GroupVersionResource{
+			Version:  "v1",
+			Resource: "serviceaccounts",
+		}),
 	}
 	for _, test := range tests {
 		serverVersion := os.Getenv("K8S_VERSION")
@@ -503,7 +503,7 @@ func TestIntegration(t *testing.T) {
 		if testing.Verbose() {
 			log.Printf("> %s", test.name)
 		}
-		err := testMatchOnObjectv2(test)
+		err := testMatchOnObject(test)
 		if err != nil {
 			t.Errorf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
 		}

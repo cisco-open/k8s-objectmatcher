@@ -36,7 +36,6 @@ func NewServiceMatcher(objectMatcher ObjectMatcher) *serviceMatcher {
 
 // Match compares two corev1.Service objects
 func (m serviceMatcher) Match(oldOrig, newOrig *corev1.Service) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

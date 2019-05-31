@@ -35,7 +35,6 @@ func NewRoleMatcher(objectMatcher ObjectMatcher) *roleMatcher {
 
 // Match compares two rbacv1.ClusterRole objects
 func (m roleMatcher) Match(oldOrig, newOrig *rbacv1.Role) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

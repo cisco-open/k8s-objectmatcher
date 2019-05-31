@@ -36,7 +36,6 @@ func NewHorizontalPodAutoscalerMatcher(objectMatcher ObjectMatcher) *horizontalP
 
 // Match compares two autoscalev2beta1.HorizontalPodAutoscaler objects
 func (m horizontalPodAutoscalerMatcher) Match(oldOrig, newOrig *autoscalev2beta1.HorizontalPodAutoscaler) (bool, error) {
-
 	old := oldOrig.DeepCopy()
 	new := newOrig.DeepCopy()
 

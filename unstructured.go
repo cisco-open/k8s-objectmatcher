@@ -35,7 +35,6 @@ func NewUnstructuredMatcher(objectMatcher ObjectMatcher) *unstructuredMatcher {
 
 // Match compares two unstructured.Unstructured objects
 func (m unstructuredMatcher) Match(old, new *unstructured.Unstructured) (bool, error) {
-
 	oldData, err := json.Marshal(old)
 	if err != nil {
 		return false, emperror.WrapWith(err, "could not marshal old object", "name", old.GetName())

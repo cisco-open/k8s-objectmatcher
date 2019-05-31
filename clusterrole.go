@@ -35,7 +35,6 @@ func NewClusterRoleMatcher(objectMatcher ObjectMatcher) *clusterRoleMatcher {
 
 // Match compares two rbacv1.ClusterRole objects
 func (m clusterRoleMatcher) Match(old, new *rbacv1.ClusterRole) (bool, error) {
-
 	type ClusterRole struct {
 		ObjectMeta
 		Rules []rbacv1.PolicyRule `json:"rules"`
