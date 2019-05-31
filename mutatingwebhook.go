@@ -42,7 +42,7 @@ func (m mutatingWebhookConfigurationMatcher) Match(oldOrig, newOrig *admissionv1
 
 	v1beta1.SetObjectDefaults_MutatingWebhookConfiguration(new)
 
-	//nullUnsupportedFields(old.Webhooks, newOrig.Webhooks, new.Webhooks)
+	nullUnsupportedFields(old.Webhooks, newOrig.Webhooks, new.Webhooks)
 
 	type MutatingWebhookConfiguration struct {
 		ObjectMeta
@@ -77,29 +77,32 @@ func (m mutatingWebhookConfigurationMatcher) Match(oldOrig, newOrig *admissionv1
 }
 
 // nullUnsupportedFields nils specific fields that were not yet present in previous apiserver versions
-//func nullUnsupportedFields(oldWebhooks, newWebhooks []admissionv1beta1.Webhook, newWebhooksWithDefaults []admissionv1beta1.Webhook) {
-//	for i, wh := range oldWebhooks {
-//		nwh := getWebhookByName(wh.Name, newWebhooks)
-//		owh := getWebhookByName(wh.Name, oldWebhooks)
-//		if nwh != nil && owh != nil && owh.AdmissionReviewVersions == nil {
-//			if nwh.AdmissionReviewVersions == nil && owh.AdmissionReviewVersions == nil {
-//				newWebhooksWithDefaults[i].AdmissionReviewVersions = nil
-//			}
-//			if nwh.TimeoutSeconds == nil && owh.TimeoutSeconds == nil {
-//				newWebhooksWithDefaults[i].TimeoutSeconds = nil
-//			}
-//			if nwh.Rules != nil && owh.Rules != nil {
-//				for j, r := range owh.Rules {
-//					if r.Scope == nil && len(nwh.Rules) > j {
-//						if nwh.Rules[j].Scope == nil {
-//							newWebhooksWithDefaults[i].Rules[j].Scope = nil
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
+func nullUnsupportedFields(oldWebhooks, newWebhooks []admissionv1beta1.Webhook, newWebhooksWithDefaults []admissionv1beta1.Webhook) {
+	for i, wh := range oldWebhooks {
+		nwh := getWebhookByName(wh.Name, newWebhooks)
+		owh := getWebhookByName(wh.Name, oldWebhooks)
+		if nwh != nil && owh != nil {
+			//if nwh.AdmissionReviewVersions == nil && owh.AdmissionReviewVersions == nil {
+			//	newWebhooksWithDefaults[i].AdmissionReviewVersions = nil
+			//}
+			//if nwh.TimeoutSeconds == nil && owh.TimeoutSeconds == nil {
+			//	newWebhooksWithDefaults[i].TimeoutSeconds = nil
+			//}
+			if nwh.SideEffects == nil && owh.SideEffects == nil {
+				newWebhooksWithDefaults[i].SideEffects = nil
+			}
+			//if nwh.Rules != nil && owh.Rules != nil {
+			//	for j, r := range owh.Rules {
+			//		if r.Scope == nil && len(nwh.Rules) > j {
+			//			if nwh.Rules[j].Scope == nil {
+			//				newWebhooksWithDefaults[i].Rules[j].Scope = nil
+			//			}
+			//		}
+			//	}
+			//}
+		}
+	}
+}
 
 // nullCABundleConditionally nils ClientConfig.CABundle value in the old object if it is nil in the new to avoid conflict
 func nullCABundleConditionally(oldWebhooks, newWebhooks []admissionv1beta1.Webhook) []admissionv1beta1.Webhook {

@@ -135,12 +135,13 @@ func (ctx *IntegrationTestContext) DeleteNamespace() error {
 }
 
 type TestItem struct {
-	name         string
-	object       metav1.Object
-	shouldMatch  bool
-	gvr          *schema.GroupVersionResource
-	remoteChange func(interface{})
-	localChange  func(interface{})
+	name           string
+	object         metav1.Object
+	shouldMatch    bool
+	gvr            *schema.GroupVersionResource
+	remoteChange   func(interface{})
+	localChange    func(interface{})
+	ignoreVersions []string
 }
 
 func NewTestMatch(name string, object metav1.Object) *TestItem {
@@ -170,6 +171,11 @@ func (t *TestItem) withLocalChange(extender func(interface{})) *TestItem {
 
 func (t *TestItem) withGroupVersionResource(gvr *schema.GroupVersionResource) *TestItem {
 	t.gvr = gvr
+	return t
+}
+
+func (t *TestItem) withIgnoreVersions(v []string) *TestItem {
+	t.ignoreVersions = v
 	return t
 }
 

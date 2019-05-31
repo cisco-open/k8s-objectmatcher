@@ -17,6 +17,8 @@ package objectmatch
 
 import (
 	"log"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/goph/emperror"
@@ -342,6 +344,23 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
+			}).withIgnoreVersions([]string{"v1.10"}),
+		NewTestMatch("crd match for deprecated version spec",
+			&v1beta1.CustomResourceDefinition{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "btests.test.org",
+				},
+				Spec: v1beta1.CustomResourceDefinitionSpec{
+					Group: "test.org",
+					Names: v1beta1.CustomResourceDefinitionNames{
+						Plural:   "btests",
+						Singular: "btest",
+						Kind:     "Btest",
+						ListKind: "Btests",
+					},
+					Scope:   v1beta1.NamespaceScoped,
+					Version: "v1",
+				},
 			}),
 		NewTestMatch("daemonset match",
 			&appsv1.DaemonSet{
@@ -467,6 +486,20 @@ func TestIntegration(t *testing.T) {
 		//}),
 	}
 	for _, test := range tests {
+		serverVersion := os.Getenv("K8S_VERSION")
+		if test.ignoreVersions != nil {
+			if serverVersion == "" {
+				t.Errorf("Ignore list defined as %s for %s, but server version is not set", test.ignoreVersions, test.name)
+				continue
+			} else {
+				if versionPrefixMatch(serverVersion, test.ignoreVersions) {
+					if testing.Verbose() {
+						log.Printf("# skipped %s due to server version", test.name)
+					}
+					continue
+				}
+			}
+		}
 		if testing.Verbose() {
 			log.Printf("> %s", test.name)
 		}
@@ -487,4 +520,13 @@ func strRef(s string) *string {
 
 func intstrRef(i intstr.IntOrString) *intstr.IntOrString {
 	return &i
+}
+
+func versionPrefixMatch(s string, l []string) bool {
+	for _, i := range l {
+		if strings.HasPrefix(s, i) {
+			return true
+		}
+	}
+	return false
 }
