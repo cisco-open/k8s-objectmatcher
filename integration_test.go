@@ -35,7 +35,6 @@ import (
 )
 
 func TestIntegration(t *testing.T) {
-
 	if !*integration {
 		t.Skip()
 	}
