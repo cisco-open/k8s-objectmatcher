@@ -1,4 +1,5 @@
 LICENSEI_VERSION = 0.1.0
+GOLANGCI_VERSION = 1.16.0
 
 all: license fmt vet
 
@@ -33,3 +34,14 @@ license-check: bin/licensei ## Run license check
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
 	bin/licensei cache
+
+bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
+	@ln -sf golangci-lint-${GOLANGCI_VERSION} bin/golangci-lint
+bin/golangci-lint-${GOLANGCI_VERSION}:
+	@mkdir -p bin
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
+	@mv bin/golangci-lint $@
+
+.PHONY: lint
+lint: bin/golangci-lint ## Run linter
+	bin/golangci-lint run

@@ -23,5 +23,6 @@ linters:
         - megacheck
         - varcheck
         - gochecknoglobals
+        # Disabled due to: ":0: nilness: impossible condition: non-nil == nil (govet)"
         - govet
     fast: false
