@@ -17,10 +17,11 @@ linters:
         - gofmt
         - golint
         - goimports
-        - gochecknoglobals
     disable:
         - errcheck
         - gas
         - megacheck
         - varcheck
+        - gochecknoglobals
+        - govet
     fast: false
