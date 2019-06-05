@@ -26,7 +26,7 @@ integration-test-base: &integration-test-base
         name: Start minikube
         background: true
         command: |
-          sudo -E minikube start --vm-driver=none --cpus 2 --memory 4096 --kubernetes-version=${K8S_VERSION}
+          sudo -E minikube start --vm-driver=none --cpus 2 --memory 4096 --kubernetes-version=${K8S_VERSION} --extra-config="kubeadm.ignore-preflight-errors=FileExisting-crictl"
 
     - run:
         name: Setup kubectl
