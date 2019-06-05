@@ -34,6 +34,71 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// This test documents the limitation of the lib where struct changes to remove a field will be missed by the matcher
+func TestIntegrationLimitations(t *testing.T) {
+	if !*integration {
+		t.Skip()
+	}
+
+	tests := []*TestItem{
+		NewTestMatch("pod matches even if we try to remove a field on the top level",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+					Affinity: &v1.Affinity{
+						PodAntiAffinity: &v1.PodAntiAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+								{
+									Namespaces:  []string{testContext.Namespace},
+									TopologyKey: "kubernetes.io/hostname",
+								},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Affinity = nil
+			}),
+		NewTestMatch("pod matches even if we try to remove a field a level deeper",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+					Affinity: &v1.Affinity{
+						PodAntiAffinity: &v1.PodAntiAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+								{
+									Namespaces:  []string{testContext.Namespace},
+									TopologyKey: "kubernetes.io/hostname",
+								},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Affinity.PodAffinity = nil
+			}),
+	}
+	runAll(t, tests)
+}
+
 func TestIntegration(t *testing.T) {
 	if !*integration {
 		t.Skip()
@@ -502,6 +567,10 @@ func TestIntegration(t *testing.T) {
 				// ignore due to already removed field
 			}).withIgnoreVersions([]string{"v1.10"}),
 	}
+	runAll(t, tests)
+}
+
+func runAll(t *testing.T, tests []*TestItem) {
 	for _, test := range tests {
 		serverVersion := os.Getenv("K8S_VERSION")
 		if test.ignoreVersions != nil {
