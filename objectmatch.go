@@ -218,6 +218,16 @@ func (om *objectMatcher) Match(old, new interface{}) (bool, error) {
 			return false, errors.WithStack(err)
 		}
 		return ok, nil
+	case *corev1.Node:
+		oldObject := old.(*corev1.Node)
+		newObject := new.(*corev1.Node)
+
+		m := NewNodeMatcher(om)
+		ok, err := m.Match(oldObject, newObject)
+		if err != nil {
+			return false, errors.WithStack(err)
+		}
+		return ok, nil
 	}
 }
 

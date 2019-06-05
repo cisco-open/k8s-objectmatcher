@@ -26,6 +26,7 @@ Here at Banzai Cloud we love and write lots of Kubernetes [operators](https://gi
 - ServiceAccount
 - PodDisruptionBudget
 - Unstructured
+- Node
 
 ### How to use it
 
