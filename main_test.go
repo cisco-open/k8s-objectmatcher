@@ -48,6 +48,7 @@ var (
 	kubeconfig    = flag.String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube/config"), "kubernetes config to use for tests")
 	kubecontext   = flag.String("kubecontext", "", "kubernetes context to use in tests")
 	keepnamespace = flag.Bool("keepnamespace", false, "keep the kubernetes namespace that was used for the tests")
+	failonerror   = flag.Bool("failonerror", false, "fail on error to be able to debug invalid state")
 	testContext   = &IntegrationTestContext{}
 )
 
@@ -364,6 +365,17 @@ func testMatchOnObject(testItem *TestItem) error {
 		}
 		defer func() {
 			err = testContext.DynamicClient.Resource(*testItem.gvr).Delete(existing.GetName(), deleteOptions)
+			if err != nil {
+				log.Printf("Failed to remove object %s", existing.GetName())
+			}
+		}()
+	case *v1.Node:
+		existing, err = testContext.Client.CoreV1().Nodes().Create(newObject.(*v1.Node))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			err = testContext.Client.CoreV1().Nodes().Delete(existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}

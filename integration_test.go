@@ -481,6 +481,26 @@ func TestIntegration(t *testing.T) {
 			Version:  "v1",
 			Resource: "serviceaccounts",
 		}),
+		NewTestMatch("node match",
+			&v1.Node{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.NodeSpec{
+					PodCIDR: "10.0.0.0/24",
+				},
+				// ignore due to already removed field
+			}).withIgnoreVersions([]string{"v1.10"}),
+		NewTestDiff("node diff for podcidr",
+			&v1.Node{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.NodeSpec{
+					PodCIDR: "10.0.0.0/24",
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				n := i.(*v1.Node)
+				n.Spec.PodCIDR = "10.0.0.1/24"
+				// ignore due to already removed field
+			}).withIgnoreVersions([]string{"v1.10"}),
 	}
 	for _, test := range tests {
 		serverVersion := os.Getenv("K8S_VERSION")
@@ -502,7 +522,11 @@ func TestIntegration(t *testing.T) {
 		}
 		err := testMatchOnObject(test)
 		if err != nil {
-			t.Errorf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
+			if *failonerror {
+				t.Fatalf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
+			} else {
+				t.Errorf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
+			}
 		}
 	}
 }
