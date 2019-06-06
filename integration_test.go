@@ -559,7 +559,7 @@ func TestIntegration(t *testing.T) {
 		}),
 		NewTestMatch("node match",
 			&v1.Node{
-				ObjectMeta: standardObjectMeta(),
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-"},
 				Spec: v1.NodeSpec{
 					PodCIDR: "10.0.0.0/24",
 				},
@@ -567,7 +567,7 @@ func TestIntegration(t *testing.T) {
 			}).withIgnoreVersions([]string{"v1.10"}),
 		NewTestDiff("node diff for podcidr",
 			&v1.Node{
-				ObjectMeta: standardObjectMeta(),
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-"},
 				Spec: v1.NodeSpec{
 					PodCIDR: "10.0.0.0/24",
 				},
