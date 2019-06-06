@@ -41,7 +41,7 @@ func TestIntegrationLimitations(t *testing.T) {
 	}
 
 	tests := []*TestItem{
-		NewTestMatch("pod matches even if we try to remove a field on the top level",
+		NewTestDiff("pod matches even if we try to remove a field on the top level",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1.PodSpec{
@@ -68,7 +68,7 @@ func TestIntegrationLimitations(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Affinity = nil
 			}),
-		NewTestMatch("pod matches even if we try to remove a field a level deeper",
+		NewTestDiff("pod matches even if we try to remove a field a level deeper",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1.PodSpec{
@@ -93,7 +93,7 @@ func TestIntegrationLimitations(t *testing.T) {
 			}).
 			withLocalChange(func(i interface{}) {
 				pod := i.(*v1.Pod)
-				pod.Spec.Affinity.PodAffinity = nil
+				pod.Spec.Affinity.PodAntiAffinity = nil
 			}),
 	}
 	runAll(t, tests)
@@ -150,17 +150,22 @@ func TestIntegration(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Containers[0].Command = []string{"1", "2", "3"}
 			}),
-		NewTestDiff("pod does not match when a field shozuld be removed",
+		NewTestDiff("pod does not match when a field shozuld be removed only if it existed before",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Name:  "test-container",
-							Image: "test-image",
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
 						},
 					},
 				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Containers[0].Command = nil
 			}).
 			withRemoteChange(func(i interface{}) {
 				pod := i.(*v1.Pod)
@@ -252,7 +257,9 @@ func TestIntegration(t *testing.T) {
 			}),
 		NewTestMatch("clusterrole matches with original",
 			&rbacv1.ClusterRole{
-				ObjectMeta: standardObjectMeta(),
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "test-",
+				},
 				Rules: []rbacv1.PolicyRule{
 					{
 						Verbs:     []string{"get"},
@@ -274,7 +281,9 @@ func TestIntegration(t *testing.T) {
 			}),
 		NewTestMatch("clusterrolebinding matches with original",
 			&rbacv1.ClusterRoleBinding{
-				ObjectMeta: standardObjectMeta(),
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "test-",
+				},
 				Subjects: []rbacv1.Subject{
 					{
 						Kind:      "ServiceAccount",
@@ -488,7 +497,9 @@ func TestIntegration(t *testing.T) {
 			}),
 		NewTestMatch("mutating webhook configuration",
 			&admregv1beta1.MutatingWebhookConfiguration{
-				ObjectMeta: standardObjectMeta(),
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "test-",
+				},
 				Webhooks: []admregv1beta1.Webhook{
 					{
 						Name: "a.b.c",
@@ -507,7 +518,7 @@ func TestIntegration(t *testing.T) {
 								},
 								Rule: admregv1beta1.Rule{
 									Resources:   []string{"pods"},
-									APIGroups:   []string{""},
+									APIGroups:   []string{"", "apps"},
 									APIVersions: []string{"*"},
 								},
 							},
