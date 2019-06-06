@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	patch "github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/goph/emperror"
 	"github.com/pkg/errors"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
@@ -34,13 +35,13 @@ import (
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
-	"k8s.io/klog/klogr"
 )
 
 var (
@@ -183,9 +184,13 @@ func (t *TestItem) withIgnoreVersions(v []string) *TestItem {
 }
 
 func testMatchOnObject(testItem *TestItem) error {
-	newObject := testItem.object
 	var existing metav1.Object
 	var err error
+	newObject := testItem.object
+	err = patch.DefaultAnnotator.RefreshLastAppliedAnnotation(newObject.(runtime.Object))
+	if err != nil {
+		return err
+	}
 	deleteOptions := &metav1.DeleteOptions{
 		GracePeriodSeconds: new(int64),
 	}
@@ -390,17 +395,24 @@ func testMatchOnObject(testItem *TestItem) error {
 		testItem.localChange(newObject)
 	}
 
-	matched, err := New(klogr.New()).Match(existing, newObject)
+	result, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object))
 	if err != nil {
 		return err
 	}
 
+	matched := result.IsUnmodified()
+
+	//matched, err := New(klogr.New()).Match(existing, newObject)
+	//if err != nil {
+	//	return err
+	//}
+
 	if testItem.shouldMatch && !matched {
-		return emperror.With(errors.New("Objects did not match"))
+		return emperror.With(errors.New("Objects did not match"), "patch", result)
 	}
 
 	if !testItem.shouldMatch && matched {
-		return emperror.With(errors.New("Objects matched although they should not"))
+		return emperror.With(errors.New("Objects matched although they should not"), "patch", result)
 	}
 
 	return nil
