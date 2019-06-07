@@ -34,71 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// This test documents the limitation of the lib where struct changes to remove a field will be missed by the matcher
-func TestIntegrationLimitations(t *testing.T) {
-	if !*integration {
-		t.Skip()
-	}
-
-	tests := []*TestItem{
-		NewTestDiff("pod matches even if we try to remove a field on the top level",
-			&v1.Pod{
-				ObjectMeta: standardObjectMeta(),
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:    "test-container",
-							Image:   "test-image",
-							Command: []string{"1", "2"},
-						},
-					},
-					Affinity: &v1.Affinity{
-						PodAntiAffinity: &v1.PodAntiAffinity{
-							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
-								{
-									Namespaces:  []string{testContext.Namespace},
-									TopologyKey: "kubernetes.io/hostname",
-								},
-							},
-						},
-					},
-				},
-			}).
-			withLocalChange(func(i interface{}) {
-				pod := i.(*v1.Pod)
-				pod.Spec.Affinity = nil
-			}),
-		NewTestDiff("pod matches even if we try to remove a field a level deeper",
-			&v1.Pod{
-				ObjectMeta: standardObjectMeta(),
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:    "test-container",
-							Image:   "test-image",
-							Command: []string{"1", "2"},
-						},
-					},
-					Affinity: &v1.Affinity{
-						PodAntiAffinity: &v1.PodAntiAffinity{
-							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
-								{
-									Namespaces:  []string{testContext.Namespace},
-									TopologyKey: "kubernetes.io/hostname",
-								},
-							},
-						},
-					},
-				},
-			}).
-			withLocalChange(func(i interface{}) {
-				pod := i.(*v1.Pod)
-				pod.Spec.Affinity.PodAntiAffinity = nil
-			}),
-	}
-	runAll(t, tests)
-}
-
 func TestIntegration(t *testing.T) {
 	if !*integration {
 		t.Skip()
@@ -250,6 +185,60 @@ func TestIntegration(t *testing.T) {
 			withRemoteChange(func(i interface{}) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Hostname = "changed on the server"
+			}),
+		NewTestDiff("pod matches even if we try to remove a field on the top level",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+					Affinity: &v1.Affinity{
+						PodAntiAffinity: &v1.PodAntiAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+								{
+									Namespaces:  []string{testContext.Namespace},
+									TopologyKey: "kubernetes.io/hostname",
+								},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Affinity = nil
+			}),
+		NewTestDiff("pod matches even if we try to remove a field a level deeper",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+							Command: []string{"1", "2"},
+						},
+					},
+					Affinity: &v1.Affinity{
+						PodAntiAffinity: &v1.PodAntiAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+								{
+									Namespaces:  []string{testContext.Namespace},
+									TopologyKey: "kubernetes.io/hostname",
+								},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.Affinity.PodAntiAffinity = nil
 			}),
 		NewTestMatch("serviceaccount matches with original",
 			&v1.ServiceAccount{
