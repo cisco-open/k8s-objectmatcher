@@ -129,9 +129,9 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 	return modified, nil
 }
 
-// RefreshLastAppliedAnnotation gets the modified configuration of the object,
+// SetLastAppliedAnnotation gets the modified configuration of the object,
 // without embedding it again, and then sets it on the object as the annotation.
-func (a *Annotator) RefreshLastAppliedAnnotation(obj runtime.Object) error {
+func (a *Annotator) SetLastAppliedAnnotation(obj runtime.Object) error {
 	modified, err := a.GetModifiedConfiguration(obj, false)
 	if err != nil {
 		return err

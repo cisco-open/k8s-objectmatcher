@@ -186,7 +186,8 @@ func TestIntegration(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Hostname = "changed on the server"
 			}),
-		NewTestDiff("pod matches even if we try to remove a field on the top level",
+		// This case did not work with the legacy version
+		NewTestDiff("pod does not match if we try to remove a field",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1.PodSpec{
@@ -212,33 +213,6 @@ func TestIntegration(t *testing.T) {
 			withLocalChange(func(i interface{}) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Affinity = nil
-			}),
-		NewTestDiff("pod matches even if we try to remove a field a level deeper",
-			&v1.Pod{
-				ObjectMeta: standardObjectMeta(),
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:    "test-container",
-							Image:   "test-image",
-							Command: []string{"1", "2"},
-						},
-					},
-					Affinity: &v1.Affinity{
-						PodAntiAffinity: &v1.PodAntiAffinity{
-							RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
-								{
-									Namespaces:  []string{testContext.Namespace},
-									TopologyKey: "kubernetes.io/hostname",
-								},
-							},
-						},
-					},
-				},
-			}).
-			withLocalChange(func(i interface{}) {
-				pod := i.(*v1.Pod)
-				pod.Spec.Affinity.PodAntiAffinity = nil
 			}),
 		NewTestMatch("serviceaccount matches with original",
 			&v1.ServiceAccount{
