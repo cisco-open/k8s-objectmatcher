@@ -25,12 +25,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
-var DefaultPatchMaker = &PatchMaker{
-	annotator: DefaultAnnotator,
-}
+var DefaultPatchMaker = NewPatchMaker(DefaultAnnotator)
 
 type PatchMaker struct {
 	annotator *Annotator
+}
+
+func NewPatchMaker(annotator *Annotator) *PatchMaker {
+	return &PatchMaker{
+		annotator: annotator,
+	}
 }
 
 func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object) (*PatchResult, error) {
@@ -88,7 +92,7 @@ type PatchResult struct {
 	Original []byte
 }
 
-func (p *PatchResult) IsUnmodified() bool {
+func (p *PatchResult) IsEmpty() bool {
 	return string(p.Patch) == "{}"
 }
 

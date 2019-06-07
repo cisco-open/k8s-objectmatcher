@@ -187,7 +187,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	var existing metav1.Object
 	var err error
 	newObject := testItem.object
-	err = patch.DefaultAnnotator.RefreshLastAppliedAnnotation(newObject.(runtime.Object))
+	err = patch.DefaultAnnotator.SetLastAppliedAnnotation(newObject.(runtime.Object))
 	if err != nil {
 		return err
 	}
@@ -395,12 +395,12 @@ func testMatchOnObject(testItem *TestItem) error {
 		testItem.localChange(newObject)
 	}
 
-	result, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object))
+	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object))
 	if err != nil {
 		return err
 	}
 
-	matched := result.IsUnmodified()
+	matched := patchResult.IsEmpty()
 
 	//matched, err := New(klogr.New()).Match(existing, newObject)
 	//if err != nil {
@@ -408,11 +408,11 @@ func testMatchOnObject(testItem *TestItem) error {
 	//}
 
 	if testItem.shouldMatch && !matched {
-		return emperror.With(errors.New("Objects did not match"), "patch", result)
+		return emperror.With(errors.New("Objects did not match"), "patch", patchResult)
 	}
 
 	if !testItem.shouldMatch && matched {
-		return emperror.With(errors.New("Objects matched although they should not"), "patch", result)
+		return emperror.With(errors.New("Objects matched although they should not"), "patch", patchResult)
 	}
 
 	return nil
