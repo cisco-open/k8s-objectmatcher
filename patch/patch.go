@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package objectmatcher
+package patch
 
 import (
 	"encoding/json"
@@ -53,7 +53,7 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object) (*P
 		return nil, emperror.Wrap(err, "Failed to delete null from modified object")
 	}
 
-	original, err := DefaultAnnotator.GetOriginalConfiguration(currentObject)
+	original, err := p.annotator.GetOriginalConfiguration(currentObject)
 	if err != nil {
 		return nil, emperror.Wrap(err, "Failed to get original configuration")
 	}

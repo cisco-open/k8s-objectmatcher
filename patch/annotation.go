@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package objectmatcher
+package patch
 
 import (
 	"encoding/json"
@@ -103,6 +103,10 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 		return nil, err
 	}
 
+	// Do not include an empty annotation map
+	if len(annots) == 0 {
+		a.metadataAccessor.SetAnnotations(obj, nil)
+	}
 	modified, err = json.Marshal(obj)
 	if err != nil {
 		return nil, err
