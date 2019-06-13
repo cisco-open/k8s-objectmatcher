@@ -70,6 +70,18 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object) (*P
 		if err != nil {
 			return nil, emperror.Wrap(err, "Failed to generate strategic merge patch")
 		}
+		// $setElementOrder can make it hard to decide whether there is an actual diff or not.
+		// In cases like that trying to apply the patch locally on current will make it clear.
+		if string(patch) != "{}" {
+			patchCurrent, err := strategicpatch.StrategicMergePatch(current, patch, modifiedObject)
+			if err != nil {
+				return nil, emperror.Wrap(err, "Failed to apply patch again to check for an actual diff")
+			}
+			patch, err = strategicpatch.CreateTwoWayMergePatch(current, patchCurrent, modifiedObject)
+			if err != nil {
+				return nil, emperror.Wrap(err, "Failed to create patch again to check for an actual diff")
+			}
+		}
 	case *unstructured.Unstructured:
 		patch, err = jsonmergepatch.CreateThreeWayJSONMergePatch(original, modified, current)
 		if err != nil {

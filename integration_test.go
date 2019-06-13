@@ -49,6 +49,14 @@ func TestIntegration(t *testing.T) {
 							Name: "test-container", Image: "test-image",
 						},
 					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
 				},
 			}),
 		NewTestDiff("pod does not match when a slice item gets removed",
