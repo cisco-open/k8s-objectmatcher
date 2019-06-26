@@ -2,6 +2,8 @@
 
 This page documents the legacy method for matching objects, which is now deprecated. Please use the the `patch` package.
 
+The legacy version was last available with the 0.1.1 version.
+
 ### Supported Objects
 
 - ClusterRole

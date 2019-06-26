@@ -29,7 +29,9 @@ original := &v1.Service{
   ...
 }
 
-patch.DefaultAnnotator.SetLastAppliedAnnotation(original)
+if err := patch.DefaultAnnotator.SetLastAppliedAnnotation(original); err != nil {
+  ...
+}
 
 client.CoreV1().Services(original.GetNamespace()).Create(original)
 ```
@@ -48,7 +50,9 @@ if err != nil {
 }
 
 if !patchResult.IsEmpty() {
-  patch.DefaultAnnotator.SetLastAppliedAnnotation(modified)
+  if err := patch.DefaultAnnotator.SetLastAppliedAnnotation(modified); err != nil {
+  	...
+  }
   client.CoreV1().Services(modified.GetNamespace()).Update(modified)
 }
 
