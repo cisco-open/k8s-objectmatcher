@@ -32,31 +32,31 @@ func NewPodDisruptionBudgetMatcher(objectMatcher ObjectMatcher) *podDisruptionBu
 }
 
 // Match compares two autoscalev2beta1.HorizontalPodAutoscaler objects
-func (m podDisruptionBudgetMatcher) Match(old, new *policyv1beta1.PodDisruptionBudget) (bool, error) {
+func (m podDisruptionBudgetMatcher) Match(oldOrig, newOrig *policyv1beta1.PodDisruptionBudget) (bool, error) {
 	type PodDisruptionBudgetMatcher struct {
 		ObjectMeta
 		Spec policyv1beta1.PodDisruptionBudgetSpec
 	}
 
 	oldData, err := json.Marshal(PodDisruptionBudgetMatcher{
-		ObjectMeta: m.objectMatcher.GetObjectMeta(old.ObjectMeta),
-		Spec:       old.Spec,
+		ObjectMeta: m.objectMatcher.GetObjectMeta(oldOrig.ObjectMeta),
+		Spec:       oldOrig.Spec,
 	})
 	if err != nil {
-		return false, emperror.WrapWith(err, "could not marshal old object", "name", old.Name)
+		return false, emperror.WrapWith(err, "could not marshal old object", "name", oldOrig.Name)
 	}
 	newObject := PodDisruptionBudgetMatcher{
-		ObjectMeta: m.objectMatcher.GetObjectMeta(new.ObjectMeta),
-		Spec:       new.Spec,
+		ObjectMeta: m.objectMatcher.GetObjectMeta(newOrig.ObjectMeta),
+		Spec:       newOrig.Spec,
 	}
 	newData, err := json.Marshal(newObject)
 	if err != nil {
-		return false, emperror.WrapWith(err, "could not marshal new object", "name", new.Name)
+		return false, emperror.WrapWith(err, "could not marshal new object", "name", newOrig.Name)
 	}
 
 	matched, err := m.objectMatcher.MatchJSON(oldData, newData, newObject)
 	if err != nil {
-		return false, emperror.WrapWith(err, "could not match objects", "name", new.Name)
+		return false, emperror.WrapWith(err, "could not match objects", "name", newOrig.Name)
 	}
 
 	return matched, nil
