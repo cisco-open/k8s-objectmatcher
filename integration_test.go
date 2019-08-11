@@ -491,6 +491,7 @@ func TestIntegration(t *testing.T) {
 									Resources:   []string{"pods"},
 									APIGroups:   []string{"", "apps"},
 									APIVersions: []string{"*"},
+									Scope:       scopeRef(admregv1beta1.AllScopes),
 								},
 							},
 						},
@@ -601,4 +602,8 @@ func versionPrefixMatch(s string, l []string) bool {
 		}
 	}
 	return false
+}
+
+func scopeRef(scopeType admregv1beta1.ScopeType) *admregv1beta1.ScopeType {
+	return &scopeType
 }
