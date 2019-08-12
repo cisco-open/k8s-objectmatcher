@@ -160,12 +160,6 @@ jobs:
       <<: *integration-test-environment
       K8S_VERSION: v1.11.9
 
-  integration-test-k8s1-10:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.10.13
-
 workflows:
   version: 2
   ci:
@@ -181,8 +175,5 @@ workflows:
           requires:
             - check
       - integration-test-k8s1-11:
-          requires:
-            - check
-      - integration-test-k8s1-10:
           requires:
             - check
