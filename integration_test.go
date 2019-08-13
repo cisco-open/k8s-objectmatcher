@@ -580,6 +580,42 @@ func TestIntegration(t *testing.T) {
 				n.Spec.PodCIDR = "10.0.0.1/24"
 				// ignore due to already removed field
 			}).withIgnoreVersions([]string{"v1.10"}),
+		NewTestMatch("statefulset diff for volumeclaimtemplates",
+			&appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-", Namespace: "default"},
+				Spec: appsv1.StatefulSetSpec{
+					Replicas: int32ref(0),
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"a": "b"},
+					},
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"a": "b"},
+						},
+						Spec: v1.PodSpec{},
+					},
+					VolumeClaimTemplates: []v1.PersistentVolumeClaim{
+						{
+							ObjectMeta: metav1.ObjectMeta{Name: "vault-raft"},
+							Spec: v1.PersistentVolumeClaimSpec{
+								AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+								Resources: v1.ResourceRequirements{
+									Requests: map[v1.ResourceName]resource.Quantity{
+										v1.ResourceStorage: resource.MustParse("2G"),
+									},
+								},
+								VolumeMode: volumeModeRef(v1.PersistentVolumeFilesystem),
+							},
+							Status: v1.PersistentVolumeClaimStatus{
+								Phase: "Pending",
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+
+			}),
 	}
 	runAll(t, tests)
 }
@@ -637,4 +673,8 @@ func versionPrefixMatch(s string, l []string) bool {
 
 func scopeRef(scopeType admregv1beta1.ScopeType) *admregv1beta1.ScopeType {
 	return &scopeType
+}
+
+func volumeModeRef(mode v1.PersistentVolumeMode) *v1.PersistentVolumeMode {
+	return &mode
 }
