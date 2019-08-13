@@ -43,6 +43,11 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object) (*P
 		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
 	}
 
+	current, _, err = DeleteNullInJson(current)
+	if err != nil {
+		return nil, emperror.Wrap(err, "Failed to delete null from modified object")
+	}
+
 	modified, err := json.Marshal(modifiedObject)
 	if err != nil {
 		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")

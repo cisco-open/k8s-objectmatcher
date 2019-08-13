@@ -385,6 +385,17 @@ func testMatchOnObject(testItem *TestItem) error {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
+	case *appsv1.StatefulSet:
+		existing, err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Create(newObject.(*appsv1.StatefulSet))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			if err != nil {
+				log.Printf("Failed to remove object %s", existing.GetName())
+			}
+		}()
 	}
 
 	if testItem.remoteChange != nil {
@@ -401,11 +412,6 @@ func testMatchOnObject(testItem *TestItem) error {
 	}
 
 	matched := patchResult.IsEmpty()
-
-	//matched, err := New(klogr.New()).Match(existing, newObject)
-	//if err != nil {
-	//	return err
-	//}
 
 	if testItem.shouldMatch && !matched {
 		return emperror.With(errors.New("Objects did not match"), "patch", patchResult)
