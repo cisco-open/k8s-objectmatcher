@@ -45,7 +45,7 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object) (*P
 
 	current, _, err = DeleteNullInJson(current)
 	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to delete null from modified object")
+		return nil, emperror.Wrap(err, "Failed to delete null from current object")
 	}
 
 	modified, err := json.Marshal(modifiedObject)

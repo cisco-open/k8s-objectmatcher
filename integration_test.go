@@ -580,7 +580,7 @@ func TestIntegration(t *testing.T) {
 				n.Spec.PodCIDR = "10.0.0.1/24"
 				// ignore due to already removed field
 			}).withIgnoreVersions([]string{"v1.10"}),
-		NewTestMatch("statefulset diff for volumeclaimtemplates",
+		NewTestMatch("statefulset match for volumeclaimtemplates",
 			&appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-", Namespace: "default"},
 				Spec: appsv1.StatefulSetSpec{
@@ -596,7 +596,9 @@ func TestIntegration(t *testing.T) {
 					},
 					VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 						{
-							ObjectMeta: metav1.ObjectMeta{Name: "vault-raft"},
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "vault-raft",
+							},
 							Spec: v1.PersistentVolumeClaimSpec{
 								AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 								Resources: v1.ResourceRequirements{
@@ -612,9 +614,6 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).
-			withLocalChange(func(i interface{}) {
-
 			}),
 	}
 	runAll(t, tests)
