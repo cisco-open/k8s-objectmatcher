@@ -1,9 +1,9 @@
 version: 2
 
 integration-test-environment: &integration-test-environment
-  GO_VERSION: "1.12.5"
+  GO_VERSION: "1.13.4"
   KUBECONFIG: /home/circleci/.kube/config
-  MINIKUBE_VERSION: v1.1.0
+  MINIKUBE_VERSION: v1.6.2
   MINIKUBE_WANTUPDATENOTIFICATION: false
   MINIKUBE_WANTREPORTERRORPROMPT: false
   MINIKUBE_HOME: /home/circleci
@@ -14,7 +14,7 @@ integration-test-environment: &integration-test-environment
 
 integration-test-base: &integration-test-base
   machine:
-    image: ubuntu-1604:201903-01
+    image: ubuntu-1604:latest
     docker_layer_caching: true
   steps:
     - run:
