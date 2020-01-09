@@ -177,7 +177,7 @@ workflows:
   ci:
     jobs:
       - check
-      - integration-test-k8s1-15:
+      - integration-test-k8s1-16:
           requires:
             - check
       - integration-test-k8s1-15:
