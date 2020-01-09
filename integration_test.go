@@ -471,7 +471,7 @@ func TestIntegration(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: "test-",
 				},
-				Webhooks: []admregv1beta1.Webhook{
+				Webhooks: []admregv1beta1.MutatingWebhook{
 					{
 						Name: "a.b.c",
 						ClientConfig: admregv1beta1.WebhookClientConfig{
@@ -497,13 +497,13 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).withIgnoreVersions([]string{"v1.11", "v1.12", "v1.13"}),
-		NewTestMatch("mutating webhook configuration",
+			}).withIgnoreVersions([]string{"v1.12", "v1.13"}),
+		NewTestMatch("mutating webhook configuration legacy versions",
 			&admregv1beta1.MutatingWebhookConfiguration{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: "test-",
 				},
-				Webhooks: []admregv1beta1.Webhook{
+				Webhooks: []admregv1beta1.MutatingWebhook{
 					{
 						Name: "a.b.c",
 						ClientConfig: admregv1beta1.WebhookClientConfig{
@@ -528,7 +528,7 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).withIgnoreVersions([]string{"v1.14"}),
+			}).withIgnoreVersions([]string{"v1.14", "v1.15"}),
 		NewTestMatch("pdb match",
 			&v1beta12.PodDisruptionBudget{
 				ObjectMeta: standardObjectMeta(),
