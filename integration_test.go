@@ -528,7 +528,7 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).withIgnoreVersions([]string{"v1.14", "v1.15"}),
+			}).withIgnoreVersions([]string{"v1.14", "v1.15", "v1.16"}),
 		NewTestMatch("pdb match",
 			&v1beta12.PodDisruptionBudget{
 				ObjectMeta: standardObjectMeta(),
