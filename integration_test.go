@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 )
 
 func TestIntegration(t *testing.T) {
@@ -452,6 +453,33 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
+			}),
+		NewTestDiff("deployment does not match when replicas changes",
+			&appsv1.Deployment{
+				ObjectMeta: standardObjectMeta(),
+				Spec: appsv1.DeploymentSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"a": "b",
+						},
+					},
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metaWithLabels(map[string]string{
+							"a": "b",
+						}),
+						Spec: v1.PodSpec{
+							Containers: []v1.Container{
+								{
+									Name: "test-container", Image: "test-image",
+								},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*appsv1.Deployment)
+				pod.Spec.Replicas = pointer.Int32Ptr(0)
 			}),
 		NewTestMatch("hpa match",
 			&v2beta1.HorizontalPodAutoscaler{
