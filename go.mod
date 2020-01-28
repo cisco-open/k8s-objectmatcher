@@ -22,5 +22,5 @@ require (
 	k8s.io/client-go v0.15.7
 	k8s.io/klog v0.4.0
 	k8s.io/kube-openapi v0.0.0-20190722073852-5e22f3d471e6 // indirect
-	k8s.io/utils v0.0.0-20190809000727-6c36bc71fc4a // indirect
+	k8s.io/utils v0.0.0-20190809000727-6c36bc71fc4a
 )

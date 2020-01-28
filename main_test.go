@@ -68,7 +68,7 @@ func TestMain(m *testing.M) {
 	if *integration {
 		err := testContext.Setup()
 		if err != nil {
-			panic("Failed to setup test namespace")
+			panic("Failed to setup test namespace: " + err.Error())
 		}
 	}
 	result := m.Run()
