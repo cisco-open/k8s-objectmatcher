@@ -15,8 +15,8 @@
 package patch
 
 import (
-	"encoding/json"
 	"fmt"
+	json "github.com/json-iterator/go"
 
 	"github.com/goph/emperror"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

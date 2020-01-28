@@ -15,7 +15,7 @@
 package patch
 
 import (
-	"encoding/json"
+	json "github.com/json-iterator/go"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
