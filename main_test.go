@@ -18,11 +18,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 
-	patch "github.com/banzaicloud/k8s-objectmatcher/patch"
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/goph/emperror"
 	"github.com/pkg/errors"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
@@ -40,13 +39,12 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
 )
 
 var (
 	integration   = flag.Bool("integration", false, "run integration tests")
-	kubeconfig    = flag.String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube/config"), "kubernetes config to use for tests")
+	kubeconfig    = flag.String("kubeconfig", "", "kubernetes config to use for tests")
 	kubecontext   = flag.String("kubecontext", "", "kubernetes context to use in tests")
 	keepnamespace = flag.Bool("keepnamespace", false, "keep the kubernetes namespace that was used for the tests")
 	failonerror   = flag.Bool("failonerror", false, "fail on error to be able to debug invalid state")
@@ -105,8 +103,12 @@ func (ctx *IntegrationTestContext) CreateNamespace() error {
 }
 
 func (ctx *IntegrationTestContext) Setup() error {
+	kubeconfigOverride := os.Getenv("KUBECONFIG")
+	if *kubeconfig != "" {
+		kubeconfigOverride = *kubeconfig
+	}
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig},
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigOverride},
 		&clientcmd.ConfigOverrides{CurrentContext: *kubecontext},
 	).ClientConfig()
 	if err != nil {
