@@ -16,6 +16,7 @@ package patch
 
 import (
 	"fmt"
+
 	json "github.com/json-iterator/go"
 
 	"github.com/goph/emperror"
@@ -37,20 +38,27 @@ func NewPatchMaker(annotator *Annotator) *PatchMaker {
 	}
 }
 
-func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object) (*PatchResult, error) {
+func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opts ...CalculateOption) (*PatchResult, error) {
 	current, err := json.Marshal(currentObject)
 	if err != nil {
 		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
 	}
 
-	current, _, err = DeleteNullInJson(current)
-	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to delete null from current object")
-	}
-
 	modified, err := json.Marshal(modifiedObject)
 	if err != nil {
 		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
+	}
+
+	for _, opt := range opts {
+		current, modified, err = opt(current, modified)
+		if err != nil {
+			return nil, emperror.Wrap(err, "Failed to apply option function")
+		}
+	}
+
+	current, _, err = DeleteNullInJson(current)
+	if err != nil {
+		return nil, emperror.Wrap(err, "Failed to delete null from current object")
 	}
 
 	modified, _, err = DeleteNullInJson(modified)

@@ -94,7 +94,7 @@ func TestIntegration(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Containers[0].Command = []string{"1", "2", "3"}
 			}),
-		NewTestDiff("pod does not match when a field shozuld be removed only if it existed before",
+		NewTestDiff("pod does not match when a field should be removed only if it existed before",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1.PodSpec{
@@ -563,6 +563,21 @@ func TestIntegration(t *testing.T) {
 				Spec: v1beta12.PodDisruptionBudgetSpec{
 					MinAvailable: intstrRef(intstr.FromInt(1)),
 				},
+			}),
+		NewTestMatch("pdb match even though status changes",
+			&v1beta12.PodDisruptionBudget{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1beta12.PodDisruptionBudgetSpec{
+					MinAvailable: intstrRef(intstr.FromInt(1)),
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pdb := i.(*v1beta12.PodDisruptionBudget)
+				pdb.Status.CurrentHealthy = 1
+				pdb.Status.DesiredHealthy = 1
+				pdb.Status.ExpectedPods = 1
+				pdb.Status.PodDisruptionsAllowed = 0
+				pdb.Status.ObservedGeneration = 1
 			}),
 		NewTestMatch("pvc match",
 			&v1.PersistentVolumeClaim{

@@ -10,7 +10,6 @@ require (
 	github.com/goph/emperror v0.17.2
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be
-	github.com/modern-go/reflect2 v1.0.1
 	github.com/pkg/errors v0.8.1
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect

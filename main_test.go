@@ -408,7 +408,7 @@ func testMatchOnObject(testItem *TestItem) error {
 		testItem.localChange(newObject)
 	}
 
-	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object))
+	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object), patch.IgnoreStatusFields())
 	if err != nil {
 		return err
 	}

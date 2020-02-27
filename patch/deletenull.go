@@ -24,6 +24,24 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+type CalculateOption func([]byte, []byte) ([]byte, []byte, error)
+
+func IgnoreStatusFields() CalculateOption {
+	return func(current, modified []byte) ([]byte, []byte, error) {
+		current, err := deleteStatusField(current)
+		if err != nil {
+			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from current byte sequence")
+		}
+
+		modified, err = deleteStatusField(modified)
+		if err != nil {
+			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from modified byte sequence")
+		}
+
+		return current, modified, nil
+	}
+}
+
 func init() {
 	// k8s.io/apimachinery/pkg/util/intstr.IntOrString behaves really badly
 	// from JSON marshaling point of view, it can't be empty basically.
@@ -134,6 +152,21 @@ func deleteNullInSlice(m []interface{}) ([]interface{}, error) {
 		}
 	}
 	return filteredSlice, nil
+}
+
+func deleteStatusField(obj []byte) ([]byte, error) {
+	var objectMap map[string]interface{}
+	err := json.Unmarshal(obj, &objectMap)
+	if err != nil {
+		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
+	}
+	delete(objectMap, "status")
+	obj, err = json.Marshal(objectMap)
+	if err != nil {
+		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
+	}
+
+	return obj, nil
 }
 
 func isZero(v reflect.Value) bool {
