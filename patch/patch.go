@@ -75,7 +75,7 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 
 	switch currentObject.(type) {
 	default:
-		lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(modifiedObject)
+		lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(currentObject)
 		if err != nil {
 			return nil, emperror.WrapWith(err, "Failed to lookup patch meta", "current object", currentObject)
 		}
