@@ -86,11 +86,11 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 		// $setElementOrder can make it hard to decide whether there is an actual diff or not.
 		// In cases like that trying to apply the patch locally on current will make it clear.
 		if string(patch) != "{}" {
-			patchCurrent, err := strategicpatch.StrategicMergePatch(current, patch, modifiedObject)
+			patchCurrent, err := strategicpatch.StrategicMergePatch(current, patch, currentObject)
 			if err != nil {
 				return nil, emperror.Wrap(err, "Failed to apply patch again to check for an actual diff")
 			}
-			patch, err = strategicpatch.CreateTwoWayMergePatch(current, patchCurrent, modifiedObject)
+			patch, err = strategicpatch.CreateTwoWayMergePatch(current, patchCurrent, currentObject)
 			if err != nil {
 				return nil, emperror.Wrap(err, "Failed to create patch again to check for an actual diff")
 			}
