@@ -658,6 +658,26 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
+		NewTestDiff("statefulset diff for template",
+			&appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-", Namespace: "default"},
+				Spec: appsv1.StatefulSetSpec{
+					Replicas: int32ref(0),
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"a": "b"},
+					},
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"a": "b"},
+						},
+						Spec: v1.PodSpec{},
+					},
+				},
+			},
+		).withLocalChange(func(i interface{}) {
+			n := i.(*appsv1.StatefulSet)
+			n.Spec.Template.ObjectMeta.Labels = map[string]string{"c": "d"}
+		}),
 	}
 	runAll(t, tests)
 }

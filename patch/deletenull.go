@@ -188,23 +188,21 @@ func deleteStatusField(obj []byte) ([]byte, error) {
 }
 
 func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
-	var objectMap struct {
-		Spec v1.StatefulSetSpec `json:"spec"`
-	}
-	err := json.Unmarshal(obj, &objectMap)
+	sts := v1.StatefulSet{}
+	err := json.Unmarshal(obj, &sts)
 	if err != nil {
 		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
 	}
 
-	for i := range objectMap.Spec.VolumeClaimTemplates {
-		objectMap.Spec.VolumeClaimTemplates[i].Kind = ""
-		objectMap.Spec.VolumeClaimTemplates[i].APIVersion = ""
-		objectMap.Spec.VolumeClaimTemplates[i].Status = corev1.PersistentVolumeClaimStatus{
+	for i := range sts.Spec.VolumeClaimTemplates {
+		sts.Spec.VolumeClaimTemplates[i].Kind = ""
+		sts.Spec.VolumeClaimTemplates[i].APIVersion = ""
+		sts.Spec.VolumeClaimTemplates[i].Status = corev1.PersistentVolumeClaimStatus{
 			Phase: corev1.ClaimPending,
 		}
 	}
 
-	obj, err = json.Marshal(objectMap)
+	obj, err = json.Marshal(sts)
 	if err != nil {
 		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
 	}
