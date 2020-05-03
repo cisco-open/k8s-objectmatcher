@@ -526,37 +526,6 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
-		NewTestMatch("mutating webhook configuration legacy versions",
-			&admregv1beta1.MutatingWebhookConfiguration{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "test-",
-				},
-				Webhooks: []admregv1beta1.MutatingWebhook{
-					{
-						Name: "a.b.c",
-						ClientConfig: admregv1beta1.WebhookClientConfig{
-							Service: &admregv1beta1.ServiceReference{
-								Name:      "test",
-								Namespace: testContext.Namespace,
-								Path:      strRef("/inject"),
-							},
-							CABundle: nil,
-						},
-						Rules: []admregv1beta1.RuleWithOperations{
-							{
-								Operations: []admregv1beta1.OperationType{
-									admregv1beta1.Create,
-								},
-								Rule: admregv1beta1.Rule{
-									Resources:   []string{"pods"},
-									APIGroups:   []string{"", "apps"},
-									APIVersions: []string{"*"},
-								},
-							},
-						},
-					},
-				},
-			}).withIgnoreVersions([]string{"v1.14", "v1.15", "v1.16", "v1.17"}),
 		NewTestMatch("pdb match",
 			&v1beta12.PodDisruptionBudget{
 				ObjectMeta: standardObjectMeta(),
