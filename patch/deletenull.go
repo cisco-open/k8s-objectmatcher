@@ -21,6 +21,8 @@ import (
 	"github.com/goph/emperror"
 	json "github.com/json-iterator/go"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -34,6 +36,22 @@ func IgnoreStatusFields() CalculateOption {
 		}
 
 		modified, err = deleteStatusField(modified)
+		if err != nil {
+			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from modified byte sequence")
+		}
+
+		return current, modified, nil
+	}
+}
+
+func IgnoreVolumeClaimTemplateTypeMetaAndStatus() CalculateOption {
+	return func(current, modified []byte) ([]byte, []byte, error) {
+		current, err := deleteVolumeClaimTemplateFields(current)
+		if err != nil {
+			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from current byte sequence")
+		}
+
+		modified, err = deleteVolumeClaimTemplateFields(modified)
 		if err != nil {
 			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from modified byte sequence")
 		}
@@ -161,6 +179,31 @@ func deleteStatusField(obj []byte) ([]byte, error) {
 		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
 	}
 	delete(objectMap, "status")
+	obj, err = json.Marshal(objectMap)
+	if err != nil {
+		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
+	}
+
+	return obj, nil
+}
+
+func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
+	var objectMap struct {
+		Spec v1.StatefulSetSpec `json:"spec"`
+	}
+	err := json.Unmarshal(obj, &objectMap)
+	if err != nil {
+		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
+	}
+
+	for i := range objectMap.Spec.VolumeClaimTemplates {
+		objectMap.Spec.VolumeClaimTemplates[i].Kind = ""
+		objectMap.Spec.VolumeClaimTemplates[i].APIVersion = ""
+		objectMap.Spec.VolumeClaimTemplates[i].Status = corev1.PersistentVolumeClaimStatus{
+			Phase: corev1.ClaimPending,
+		}
+	}
+
 	obj, err = json.Marshal(objectMap)
 	if err != nil {
 		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
