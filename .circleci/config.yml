@@ -204,9 +204,3 @@ workflows:
       - integration-test-k8s1-14:
           requires:
             - check
-      - integration-test-k8s1-13:
-          requires:
-            - check
-      - integration-test-k8s1-12:
-          requires:
-            - check

@@ -525,7 +525,7 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).withIgnoreVersions([]string{"v1.12", "v1.13"}),
+			}),
 		NewTestMatch("mutating webhook configuration legacy versions",
 			&admregv1beta1.MutatingWebhookConfiguration{
 				ObjectMeta: metav1.ObjectMeta{
