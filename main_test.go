@@ -188,6 +188,10 @@ func (t *TestItem) withIgnoreVersions(v []string) *TestItem {
 func testMatchOnObject(testItem *TestItem) error {
 	var existing metav1.Object
 	var err error
+	opts := []patch.CalculateOption{
+		patch.IgnoreStatusFields(),
+	}
+
 	newObject := testItem.object
 	err = patch.DefaultAnnotator.SetLastAppliedAnnotation(newObject.(runtime.Object))
 	if err != nil {
@@ -388,6 +392,7 @@ func testMatchOnObject(testItem *TestItem) error {
 			}
 		}()
 	case *appsv1.StatefulSet:
+		opts = append(opts, patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus())
 		existing, err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Create(newObject.(*appsv1.StatefulSet))
 		if err != nil {
 			return emperror.WrapWith(err, "failed to create object", "object", newObject)
@@ -408,7 +413,7 @@ func testMatchOnObject(testItem *TestItem) error {
 		testItem.localChange(newObject)
 	}
 
-	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object), patch.IgnoreStatusFields())
+	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object), opts...)
 	if err != nil {
 		return err
 	}

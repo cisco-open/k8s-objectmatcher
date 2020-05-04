@@ -525,38 +525,7 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).withIgnoreVersions([]string{"v1.12", "v1.13"}),
-		NewTestMatch("mutating webhook configuration legacy versions",
-			&admregv1beta1.MutatingWebhookConfiguration{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "test-",
-				},
-				Webhooks: []admregv1beta1.MutatingWebhook{
-					{
-						Name: "a.b.c",
-						ClientConfig: admregv1beta1.WebhookClientConfig{
-							Service: &admregv1beta1.ServiceReference{
-								Name:      "test",
-								Namespace: testContext.Namespace,
-								Path:      strRef("/inject"),
-							},
-							CABundle: nil,
-						},
-						Rules: []admregv1beta1.RuleWithOperations{
-							{
-								Operations: []admregv1beta1.OperationType{
-									admregv1beta1.Create,
-								},
-								Rule: admregv1beta1.Rule{
-									Resources:   []string{"pods"},
-									APIGroups:   []string{"", "apps"},
-									APIVersions: []string{"*"},
-								},
-							},
-						},
-					},
-				},
-			}).withIgnoreVersions([]string{"v1.14", "v1.15", "v1.16"}),
+			}),
 		NewTestMatch("pdb match",
 			&v1beta12.PodDisruptionBudget{
 				ObjectMeta: standardObjectMeta(),
@@ -658,6 +627,26 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
+		NewTestDiff("statefulset diff for template",
+			&appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-", Namespace: "default"},
+				Spec: appsv1.StatefulSetSpec{
+					Replicas: int32ref(0),
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"a": "b"},
+					},
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"a": "b"},
+						},
+						Spec: v1.PodSpec{},
+					},
+				},
+			},
+		).withLocalChange(func(i interface{}) {
+			n := i.(*appsv1.StatefulSet)
+			n.Spec.Template.ObjectMeta.Labels = map[string]string{"c": "d"}
+		}),
 	}
 	runAll(t, tests)
 }
