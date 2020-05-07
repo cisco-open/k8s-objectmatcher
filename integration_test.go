@@ -305,6 +305,46 @@ func TestIntegration(t *testing.T) {
 					Type: v1.ServiceTypeLoadBalancer,
 				},
 			}),
+		NewTestDiff("service with named port diffs with existing",
+			&v1.Service{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{
+						{
+							Name:       "http",
+							Protocol:   v1.ProtocolTCP,
+							Port:       80,
+							TargetPort: intstr.FromString("http"),
+						},
+					},
+					Selector: map[string]string{
+						"app": "test",
+					},
+					Type: v1.ServiceTypeLoadBalancer,
+				},
+			}).
+			withLocalChange(func(a interface{}) {
+				b := a.(*v1.Service)
+				b.Spec.Ports[0].TargetPort = intstr.FromString("https")
+			}),
+		NewTestMatch("service with named port matches with original",
+			&v1.Service{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{
+						{
+							Name:       "http",
+							Protocol:   v1.ProtocolTCP,
+							Port:       80,
+							TargetPort: intstr.FromString("http"),
+						},
+					},
+					Selector: map[string]string{
+						"app": "test",
+					},
+					Type: v1.ServiceTypeLoadBalancer,
+				},
+			}),
 		NewTestMatch("service matches with original even if defaults are not set",
 			&v1.Service{
 				ObjectMeta: standardObjectMeta(),
