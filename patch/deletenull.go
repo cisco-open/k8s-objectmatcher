@@ -72,14 +72,18 @@ func init() {
 		func(ptr unsafe.Pointer, stream *json.Stream) {
 			i := (*intstr.IntOrString)(ptr)
 			if i.IntValue() == 0 {
-				stream.WriteNil()
+				if i.StrVal != "" && i.StrVal != "0" {
+					stream.WriteString(i.StrVal)
+				} else {
+					stream.WriteNil()
+				}
 			} else {
 				stream.WriteInt(i.IntValue())
 			}
 		},
 		func(ptr unsafe.Pointer) bool {
 			i := (*intstr.IntOrString)(ptr)
-			return i.IntValue() == 0
+			return i.IntValue() == 0 && (i.StrVal == "" || i.StrVal == "0")
 		},
 	)
 }
