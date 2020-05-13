@@ -15,6 +15,8 @@
 package patch
 
 import (
+	"encoding/base64"
+
 	json "github.com/json-iterator/go"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -54,6 +56,11 @@ func (a *Annotator) GetOriginalConfiguration(obj runtime.Object) ([]byte, error)
 		return nil, nil
 	}
 
+	// Try to base64 decode, and fallback to non-base64 encoded content for backwards compatibility.
+	if decoded, err := base64.StdEncoding.DecodeString(original); err == nil {
+		return decoded, nil
+	}
+
 	return []byte(original), nil
 }
 
@@ -73,7 +80,7 @@ func (a *Annotator) SetOriginalConfiguration(obj runtime.Object, original []byte
 		annots = map[string]string{}
 	}
 
-	annots[a.key] = string(original)
+	annots[a.key] = base64.StdEncoding.EncodeToString(original)
 	return a.metadataAccessor.SetAnnotations(obj, annots)
 }
 
@@ -107,13 +114,14 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 	if len(annots) == 0 {
 		a.metadataAccessor.SetAnnotations(obj, nil)
 	}
+
 	modified, err = json.Marshal(obj)
 	if err != nil {
 		return nil, err
 	}
 
 	if annotate {
-		annots[a.key] = string(modified)
+		annots[a.key] = base64.StdEncoding.EncodeToString(modified)
 		if err := a.metadataAccessor.SetAnnotations(obj, annots); err != nil {
 			return nil, err
 		}

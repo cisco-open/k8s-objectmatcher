@@ -280,6 +280,17 @@ func testMatchOnObject(testItem *TestItem) error {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
+	case *v1.Secret:
+		existing, err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Create(newObject.(*v1.Secret))
+		if err != nil {
+			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+		}
+		defer func() {
+			err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			if err != nil {
+				log.Printf("Failed to remove object %s", existing.GetName())
+			}
+		}()
 	case *v1beta1.CustomResourceDefinition:
 		existing, err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newObject.(*v1beta1.CustomResourceDefinition))
 		if err != nil {
