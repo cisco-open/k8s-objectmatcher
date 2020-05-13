@@ -56,6 +56,7 @@ func (a *Annotator) GetOriginalConfiguration(obj runtime.Object) ([]byte, error)
 		return nil, nil
 	}
 
+	// Try to base64 decode, and fallback to non-base64 encoded content for backwards compatibility.
 	if decoded, err := base64.StdEncoding.DecodeString(original); err == nil {
 		return decoded, nil
 	}
