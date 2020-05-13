@@ -17,6 +17,7 @@ package patch
 import (
 	json "github.com/json-iterator/go"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -107,6 +108,26 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 	if len(annots) == 0 {
 		a.metadataAccessor.SetAnnotations(obj, nil)
 	}
+
+	switch s := obj.(type) {
+	case *corev1.Secret:
+		if len(s.StringData) != 0 {
+			secret := s.DeepCopy()
+
+			if secret.Data == nil {
+				secret.Data = make(map[string][]byte, len(s.StringData))
+			}
+
+			for k, v := range s.StringData {
+				secret.Data[k] = []byte(v)
+			}
+
+			secret.StringData = nil
+
+			obj = secret
+		}
+	}
+
 	modified, err = json.Marshal(obj)
 	if err != nil {
 		return nil, err
