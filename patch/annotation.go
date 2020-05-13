@@ -15,9 +15,10 @@
 package patch
 
 import (
+	"encoding/base64"
+
 	json "github.com/json-iterator/go"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -55,6 +56,10 @@ func (a *Annotator) GetOriginalConfiguration(obj runtime.Object) ([]byte, error)
 		return nil, nil
 	}
 
+	if decoded, err := base64.StdEncoding.DecodeString(original); err == nil {
+		return decoded, nil
+	}
+
 	return []byte(original), nil
 }
 
@@ -74,7 +79,7 @@ func (a *Annotator) SetOriginalConfiguration(obj runtime.Object, original []byte
 		annots = map[string]string{}
 	}
 
-	annots[a.key] = string(original)
+	annots[a.key] = base64.StdEncoding.EncodeToString(original)
 	return a.metadataAccessor.SetAnnotations(obj, annots)
 }
 
@@ -109,32 +114,13 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 		a.metadataAccessor.SetAnnotations(obj, nil)
 	}
 
-	switch s := obj.(type) {
-	case *corev1.Secret:
-		if len(s.StringData) != 0 {
-			secret := s.DeepCopy()
-
-			if secret.Data == nil {
-				secret.Data = make(map[string][]byte, len(s.StringData))
-			}
-
-			for k, v := range s.StringData {
-				secret.Data[k] = []byte(v)
-			}
-
-			secret.StringData = nil
-
-			obj = secret
-		}
-	}
-
 	modified, err = json.Marshal(obj)
 	if err != nil {
 		return nil, err
 	}
 
 	if annotate {
-		annots[a.key] = string(modified)
+		annots[a.key] = base64.StdEncoding.EncodeToString(modified)
 		if err := a.metadataAccessor.SetAnnotations(obj, annots); err != nil {
 			return nil, err
 		}

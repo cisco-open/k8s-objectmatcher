@@ -226,8 +226,8 @@ func TestIntegration(t *testing.T) {
 		NewTestMatch("secret matches with original",
 			&v1.Secret{
 				ObjectMeta: standardObjectMeta(),
-				StringData: map[string]string{
-					"key": "secretValue",
+				Data: map[string][]byte{
+					"key": []byte("secretValue"),
 				},
 			}),
 		NewTestMatch("serviceaccount matches with original",
