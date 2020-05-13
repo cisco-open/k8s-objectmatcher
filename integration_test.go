@@ -223,7 +223,7 @@ func TestIntegration(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Affinity = nil
 			}),
-		NewTestMatch("Secret matches with original",
+		NewTestMatch("secret matches with original",
 			&v1.Secret{
 				ObjectMeta: standardObjectMeta(),
 				StringData: map[string]string{
