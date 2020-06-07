@@ -115,7 +115,7 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 		a.metadataAccessor.SetAnnotations(obj, nil)
 	}
 
-	modified, err = json.Marshal(obj)
+	modified, err = json.ConfigCompatibleWithStandardLibrary.Marshal(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 			return nil, err
 		}
 
-		modified, err = json.Marshal(obj)
+		modified, err = json.ConfigCompatibleWithStandardLibrary.Marshal(obj)
 		if err != nil {
 			return nil, err
 		}
