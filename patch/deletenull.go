@@ -101,7 +101,7 @@ func DeleteNullInJson(jsonBytes []byte) ([]byte, map[string]interface{}, error) 
 		return nil, nil, emperror.Wrap(err, "could not delete null values from patch map")
 	}
 
-	o, err := json.Marshal(filteredMap)
+	o, err := json.ConfigCompatibleWithStandardLibrary.Marshal(filteredMap)
 	if err != nil {
 		return nil, nil, emperror.Wrap(err, "could not marshal filtered patch map")
 	}
@@ -183,7 +183,7 @@ func deleteStatusField(obj []byte) ([]byte, error) {
 		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
 	}
 	delete(objectMap, "status")
-	obj, err = json.Marshal(objectMap)
+	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(objectMap)
 	if err != nil {
 		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
 	}
@@ -206,7 +206,7 @@ func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
 		}
 	}
 
-	obj, err = json.Marshal(sts)
+	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(sts)
 	if err != nil {
 		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
 	}

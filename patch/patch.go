@@ -39,12 +39,12 @@ func NewPatchMaker(annotator *Annotator) *PatchMaker {
 }
 
 func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opts ...CalculateOption) (*PatchResult, error) {
-	current, err := json.Marshal(currentObject)
+	current, err := json.ConfigCompatibleWithStandardLibrary.Marshal(currentObject)
 	if err != nil {
 		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
 	}
 
-	modified, err := json.Marshal(modifiedObject)
+	modified, err := json.ConfigCompatibleWithStandardLibrary.Marshal(modifiedObject)
 	if err != nil {
 		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
 	}
