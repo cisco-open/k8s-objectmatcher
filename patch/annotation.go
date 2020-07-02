@@ -15,7 +15,11 @@
 package patch
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/base64"
+	"io/ioutil"
+	"net/http"
 
 	json "github.com/json-iterator/go"
 
@@ -58,7 +62,9 @@ func (a *Annotator) GetOriginalConfiguration(obj runtime.Object) ([]byte, error)
 
 	// Try to base64 decode, and fallback to non-base64 encoded content for backwards compatibility.
 	if decoded, err := base64.StdEncoding.DecodeString(original); err == nil {
-		return decoded, nil
+		if http.DetectContentType(decoded) == "application/zip" {
+			return UnZipAnnotation(decoded)
+		}
 	}
 
 	return []byte(original), nil
@@ -80,7 +86,10 @@ func (a *Annotator) SetOriginalConfiguration(obj runtime.Object, original []byte
 		annots = map[string]string{}
 	}
 
-	annots[a.key] = base64.StdEncoding.EncodeToString(original)
+	annots[a.key], err = ZipAndBase64EncodeAnnotation(original)
+	if err != nil {
+		return err
+	}
 	return a.metadataAccessor.SetAnnotations(obj, annots)
 }
 
@@ -121,7 +130,10 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 	}
 
 	if annotate {
-		annots[a.key] = base64.StdEncoding.EncodeToString(modified)
+		annots[a.key], err = ZipAndBase64EncodeAnnotation(modified)
+		if err != nil {
+			return nil, err
+		}
 		if err := a.metadataAccessor.SetAnnotations(obj, annots); err != nil {
 			return nil, err
 		}
@@ -154,4 +166,59 @@ func (a *Annotator) SetLastAppliedAnnotation(obj runtime.Object) error {
 		return err
 	}
 	return a.SetOriginalConfiguration(obj, modifiedWithoutNulls)
+}
+
+func ZipAndBase64EncodeAnnotation(original []byte) (string, error) {
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	w := zip.NewWriter(buf)
+
+	f, err := w.Create("original")
+	if err != nil {
+		return "", err
+	}
+	_, err = f.Write(original)
+	if err != nil {
+		return "", err
+	}
+
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
+}
+
+func UnZipAnnotation(original []byte) ([]byte, error) {
+	annotation, err := ioutil.ReadAll(bytes.NewReader(original))
+	if err != nil {
+		return nil, err
+	}
+
+	zipReader, err := zip.NewReader(bytes.NewReader(annotation), int64(len(annotation)))
+	if err != nil {
+		return nil, err
+	}
+
+	// Read the file from zip archive
+	zipFile := zipReader.File[0]
+	unzippedFileBytes, err := readZipFile(zipFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return unzippedFileBytes, nil
+}
+
+func readZipFile(zf *zip.File) ([]byte, error) {
+	f, err := zf.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return ioutil.ReadAll(f)
 }
