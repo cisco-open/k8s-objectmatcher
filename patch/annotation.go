@@ -63,7 +63,7 @@ func (a *Annotator) GetOriginalConfiguration(obj runtime.Object) ([]byte, error)
 	// Try to base64 decode, and fallback to non-base64 encoded content for backwards compatibility.
 	if decoded, err := base64.StdEncoding.DecodeString(original); err == nil {
 		if http.DetectContentType(decoded) == "application/zip" {
-			return UnZipAnnotation(decoded)
+			return unZipAnnotation(decoded)
 		}
 	}
 
@@ -86,7 +86,7 @@ func (a *Annotator) SetOriginalConfiguration(obj runtime.Object, original []byte
 		annots = map[string]string{}
 	}
 
-	annots[a.key], err = ZipAndBase64EncodeAnnotation(original)
+	annots[a.key], err = zipAndBase64EncodeAnnotation(original)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (a *Annotator) GetModifiedConfiguration(obj runtime.Object, annotate bool) 
 	}
 
 	if annotate {
-		annots[a.key], err = ZipAndBase64EncodeAnnotation(modified)
+		annots[a.key], err = zipAndBase64EncodeAnnotation(modified)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +168,7 @@ func (a *Annotator) SetLastAppliedAnnotation(obj runtime.Object) error {
 	return a.SetOriginalConfiguration(obj, modifiedWithoutNulls)
 }
 
-func ZipAndBase64EncodeAnnotation(original []byte) (string, error) {
+func zipAndBase64EncodeAnnotation(original []byte) (string, error) {
 	// Create a buffer to write our archive to.
 	buf := new(bytes.Buffer)
 
@@ -193,7 +193,7 @@ func ZipAndBase64EncodeAnnotation(original []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
 }
 
-func UnZipAnnotation(original []byte) ([]byte, error) {
+func unZipAnnotation(original []byte) ([]byte, error) {
 	annotation, err := ioutil.ReadAll(bytes.NewReader(original))
 	if err != nil {
 		return nil, err
