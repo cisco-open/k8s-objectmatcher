@@ -65,6 +65,7 @@ func (a *Annotator) GetOriginalConfiguration(obj runtime.Object) ([]byte, error)
 		if http.DetectContentType(decoded) == "application/zip" {
 			return unZipAnnotation(decoded)
 		}
+		return decoded, nil
 	}
 
 	return []byte(original), nil
