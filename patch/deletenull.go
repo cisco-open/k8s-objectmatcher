@@ -18,9 +18,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/goph/emperror"
+	"emperror.dev/errors"
 	json "github.com/json-iterator/go"
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -32,12 +31,12 @@ func IgnoreStatusFields() CalculateOption {
 	return func(current, modified []byte) ([]byte, []byte, error) {
 		current, err := deleteStatusField(current)
 		if err != nil {
-			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from current byte sequence")
+			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from current byte sequence")
 		}
 
 		modified, err = deleteStatusField(modified)
 		if err != nil {
-			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from modified byte sequence")
+			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from modified byte sequence")
 		}
 
 		return current, modified, nil
@@ -48,12 +47,12 @@ func IgnoreVolumeClaimTemplateTypeMetaAndStatus() CalculateOption {
 	return func(current, modified []byte) ([]byte, []byte, error) {
 		current, err := deleteVolumeClaimTemplateFields(current)
 		if err != nil {
-			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from current byte sequence")
+			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from current byte sequence")
 		}
 
 		modified, err = deleteVolumeClaimTemplateFields(modified)
 		if err != nil {
-			return []byte{}, []byte{}, emperror.Wrap(err, "could not delete status field from modified byte sequence")
+			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from modified byte sequence")
 		}
 
 		return current, modified, nil
@@ -93,17 +92,17 @@ func DeleteNullInJson(jsonBytes []byte) ([]byte, map[string]interface{}, error) 
 
 	err := json.Unmarshal(jsonBytes, &patchMap)
 	if err != nil {
-		return nil, nil, emperror.Wrap(err, "could not unmarshal json patch")
+		return nil, nil, errors.Wrap(err, "could not unmarshal json patch")
 	}
 
 	filteredMap, err := deleteNullInObj(patchMap)
 	if err != nil {
-		return nil, nil, emperror.Wrap(err, "could not delete null values from patch map")
+		return nil, nil, errors.Wrap(err, "could not delete null values from patch map")
 	}
 
 	o, err := json.ConfigCompatibleWithStandardLibrary.Marshal(filteredMap)
 	if err != nil {
-		return nil, nil, emperror.Wrap(err, "could not marshal filtered patch map")
+		return nil, nil, errors.Wrap(err, "could not marshal filtered patch map")
 	}
 
 	return o, filteredMap, err
@@ -137,7 +136,7 @@ func deleteNullInObj(m map[string]interface{}) (map[string]interface{}, error) {
 			var filteredSubMap map[string]interface{}
 			filteredSubMap, err = deleteNullInObj(typedVal)
 			if err != nil {
-				return nil, emperror.Wrap(err, "could not delete null values from filtered sub map")
+				return nil, errors.Wrap(err, "could not delete null values from filtered sub map")
 			}
 
 			if len(filteredSubMap) != 0 {
@@ -168,7 +167,7 @@ func deleteNullInSlice(m []interface{}) ([]interface{}, error) {
 		case map[string]interface{}:
 			filteredMap, err := deleteNullInObj(typedVal)
 			if err != nil {
-				return nil, emperror.Wrap(err, "could not delete null values from filtered sub map")
+				return nil, errors.Wrap(err, "could not delete null values from filtered sub map")
 			}
 			filteredSlice[key] = filteredMap
 		}
@@ -180,12 +179,12 @@ func deleteStatusField(obj []byte) ([]byte, error) {
 	var objectMap map[string]interface{}
 	err := json.Unmarshal(obj, &objectMap)
 	if err != nil {
-		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
+		return []byte{}, errors.Wrap(err, "could not unmarshal byte sequence")
 	}
 	delete(objectMap, "status")
 	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(objectMap)
 	if err != nil {
-		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
+		return []byte{}, errors.Wrap(err, "could not marshal byte sequence")
 	}
 
 	return obj, nil
@@ -195,7 +194,7 @@ func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
 	sts := v1.StatefulSet{}
 	err := json.Unmarshal(obj, &sts)
 	if err != nil {
-		return []byte{}, emperror.Wrap(err, "could not unmarshal byte sequence")
+		return []byte{}, errors.Wrap(err, "could not unmarshal byte sequence")
 	}
 
 	for i := range sts.Spec.VolumeClaimTemplates {
@@ -208,7 +207,7 @@ func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
 
 	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(sts)
 	if err != nil {
-		return []byte{}, emperror.Wrap(err, "could not marshal byte sequence")
+		return []byte{}, errors.Wrap(err, "could not marshal byte sequence")
 	}
 
 	return obj, nil
