@@ -19,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goph/emperror"
+	"emperror.dev/errors"
 	admregv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
@@ -720,9 +720,9 @@ func runAll(t *testing.T, tests []*TestItem) {
 		err := testMatchOnObject(test)
 		if err != nil {
 			if *failonerror {
-				t.Fatalf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
+				t.Fatalf("Test '%s' failed: %s %s", test.name, err, errors.GetDetails(err))
 			} else {
-				t.Errorf("Test '%s' failed: %s %s", test.name, err, emperror.Context(err))
+				t.Errorf("Test '%s' failed: %s %s", test.name, err, errors.GetDetails(err))
 			}
 		}
 	}

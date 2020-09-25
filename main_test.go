@@ -21,9 +21,8 @@ import (
 	"reflect"
 	"testing"
 
+	"emperror.dev/errors"
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
-	"github.com/goph/emperror"
-	"github.com/pkg/errors"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
@@ -116,19 +115,19 @@ func (ctx *IntegrationTestContext) Setup() error {
 	}
 	ctx.Client, err = kubernetes.NewForConfig(config)
 	if err != nil {
-		return emperror.Wrap(err, "Failed to create kubernetes client")
+		return errors.Wrap(err, "Failed to create kubernetes client")
 	}
 	ctx.DynamicClient, err = dynamic.NewForConfig(config)
 	if err != nil {
-		return emperror.Wrap(err, "Failed to create dynamic client")
+		return errors.Wrap(err, "Failed to create dynamic client")
 	}
 	ctx.ExtensionsClient, err = apiextension.NewForConfig(config)
 	if err != nil {
-		return emperror.Wrap(err, "Failed to create apiextensions client")
+		return errors.Wrap(err, "Failed to create apiextensions client")
 	}
 	err = testContext.CreateNamespace()
 	if err != nil {
-		return emperror.Wrap(err, "Failed to create test namespace")
+		return errors.Wrap(err, "Failed to create test namespace")
 	}
 	return err
 }
@@ -202,11 +201,11 @@ func testMatchOnObject(testItem *TestItem) error {
 	}
 	switch newObject.(type) {
 	default:
-		return emperror.With(errors.New("Unsupported type"), "type", reflect.TypeOf(newObject), "object", newObject)
+		return errors.WithDetails(errors.New("Unsupported type"), "type", reflect.TypeOf(newObject), "object", newObject)
 	case *rbacv1.ClusterRole:
 		existing, err = testContext.Client.RbacV1().ClusterRoles().Create(newObject.(*rbacv1.ClusterRole))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.RbacV1().ClusterRoles().Delete(existing.GetName(), deleteOptions)
@@ -217,7 +216,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *rbacv1.Role:
 		existing, err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Create(newObject.(*rbacv1.Role))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -228,7 +227,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *rbacv1.ClusterRoleBinding:
 		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(newObject.(*rbacv1.ClusterRoleBinding))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.RbacV1().ClusterRoleBindings().Delete(existing.GetName(), deleteOptions)
@@ -239,7 +238,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *rbacv1.RoleBinding:
 		existing, err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Create(newObject.(*rbacv1.RoleBinding))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -250,7 +249,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.Pod:
 		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(newObject.(*v1.Pod))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -261,7 +260,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.Service:
 		existing, err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Create(newObject.(*v1.Service))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -272,7 +271,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.ConfigMap:
 		existing, err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Create(newObject.(*v1.ConfigMap))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -283,7 +282,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.Secret:
 		existing, err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Create(newObject.(*v1.Secret))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -294,7 +293,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1beta1.CustomResourceDefinition:
 		existing, err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newObject.(*v1beta1.CustomResourceDefinition))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(existing.GetName(), deleteOptions)
@@ -305,7 +304,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *appsv1.DaemonSet:
 		existing, err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Create(newObject.(*appsv1.DaemonSet))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -316,7 +315,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *appsv1.Deployment:
 		existing, err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Create(newObject.(*appsv1.Deployment))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -327,7 +326,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v2beta1.HorizontalPodAutoscaler:
 		existing, err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(newObject.(*v2beta1.HorizontalPodAutoscaler))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -338,7 +337,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *admissionregistrationv1beta1.MutatingWebhookConfiguration:
 		existing, err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(newObject.(*admissionregistrationv1beta1.MutatingWebhookConfiguration))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(existing.GetName(), deleteOptions)
@@ -349,7 +348,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *policyv1beta1.PodDisruptionBudget:
 		existing, err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Create(newObject.(*policyv1beta1.PodDisruptionBudget))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -360,7 +359,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.PersistentVolumeClaim:
 		existing, err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Create(newObject.(*v1.PersistentVolumeClaim))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -371,7 +370,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.ServiceAccount:
 		existing, err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Create(newObject.(*v1.ServiceAccount))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -383,7 +382,7 @@ func testMatchOnObject(testItem *TestItem) error {
 		existing, err = testContext.DynamicClient.Resource(*testItem.gvr).Namespace(testContext.Namespace).
 			Create(newObject.(*unstructured.Unstructured), metav1.CreateOptions{})
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.DynamicClient.Resource(*testItem.gvr).Delete(existing.GetName(), deleteOptions)
@@ -394,7 +393,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	case *v1.Node:
 		existing, err = testContext.Client.CoreV1().Nodes().Create(newObject.(*v1.Node))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.CoreV1().Nodes().Delete(existing.GetName(), deleteOptions)
@@ -406,7 +405,7 @@ func testMatchOnObject(testItem *TestItem) error {
 		opts = append(opts, patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus())
 		existing, err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Create(newObject.(*appsv1.StatefulSet))
 		if err != nil {
-			return emperror.WrapWith(err, "failed to create object", "object", newObject)
+			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
 			err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
@@ -432,11 +431,11 @@ func testMatchOnObject(testItem *TestItem) error {
 	matched := patchResult.IsEmpty()
 
 	if testItem.shouldMatch && !matched {
-		return emperror.With(errors.New("Objects did not match"), "patch", patchResult)
+		return errors.WithDetails(errors.New("Objects did not match"), "patch", patchResult)
 	}
 
 	if !testItem.shouldMatch && matched {
-		return emperror.With(errors.New("Objects matched although they should not"), "patch", patchResult)
+		return errors.WithDetails(errors.New("Objects matched although they should not"), "patch", patchResult)
 	}
 
 	return nil

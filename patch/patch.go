@@ -19,7 +19,7 @@ import (
 
 	json "github.com/json-iterator/go"
 
-	"github.com/goph/emperror"
+	"emperror.dev/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
@@ -41,34 +41,34 @@ func NewPatchMaker(annotator *Annotator) *PatchMaker {
 func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opts ...CalculateOption) (*PatchResult, error) {
 	current, err := json.ConfigCompatibleWithStandardLibrary.Marshal(currentObject)
 	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
+		return nil, errors.Wrap(err, "Failed to convert current object to byte sequence")
 	}
 
 	modified, err := json.ConfigCompatibleWithStandardLibrary.Marshal(modifiedObject)
 	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to convert current object to byte sequence")
+		return nil, errors.Wrap(err, "Failed to convert current object to byte sequence")
 	}
 
 	for _, opt := range opts {
 		current, modified, err = opt(current, modified)
 		if err != nil {
-			return nil, emperror.Wrap(err, "Failed to apply option function")
+			return nil, errors.Wrap(err, "Failed to apply option function")
 		}
 	}
 
 	current, _, err = DeleteNullInJson(current)
 	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to delete null from current object")
+		return nil, errors.Wrap(err, "Failed to delete null from current object")
 	}
 
 	modified, _, err = DeleteNullInJson(modified)
 	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to delete null from modified object")
+		return nil, errors.Wrap(err, "Failed to delete null from modified object")
 	}
 
 	original, err := p.annotator.GetOriginalConfiguration(currentObject)
 	if err != nil {
-		return nil, emperror.Wrap(err, "Failed to get original configuration")
+		return nil, errors.Wrap(err, "Failed to get original configuration")
 	}
 
 	var patch []byte
@@ -77,28 +77,28 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 	default:
 		lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(currentObject)
 		if err != nil {
-			return nil, emperror.WrapWith(err, "Failed to lookup patch meta", "current object", currentObject)
+			return nil, errors.WrapWithDetails(err, "Failed to lookup patch meta", "current object", currentObject)
 		}
 		patch, err = strategicpatch.CreateThreeWayMergePatch(original, modified, current, lookupPatchMeta, true)
 		if err != nil {
-			return nil, emperror.Wrap(err, "Failed to generate strategic merge patch")
+			return nil, errors.Wrap(err, "Failed to generate strategic merge patch")
 		}
 		// $setElementOrder can make it hard to decide whether there is an actual diff or not.
 		// In cases like that trying to apply the patch locally on current will make it clear.
 		if string(patch) != "{}" {
 			patchCurrent, err := strategicpatch.StrategicMergePatch(current, patch, currentObject)
 			if err != nil {
-				return nil, emperror.Wrap(err, "Failed to apply patch again to check for an actual diff")
+				return nil, errors.Wrap(err, "Failed to apply patch again to check for an actual diff")
 			}
 			patch, err = strategicpatch.CreateTwoWayMergePatch(current, patchCurrent, currentObject)
 			if err != nil {
-				return nil, emperror.Wrap(err, "Failed to create patch again to check for an actual diff")
+				return nil, errors.Wrap(err, "Failed to create patch again to check for an actual diff")
 			}
 		}
 	case *unstructured.Unstructured:
 		patch, err = jsonmergepatch.CreateThreeWayJSONMergePatch(original, modified, current)
 		if err != nil {
-			return nil, emperror.Wrap(err, "Failed to generate merge patch")
+			return nil, errors.Wrap(err, "Failed to generate merge patch")
 		}
 	}
 
