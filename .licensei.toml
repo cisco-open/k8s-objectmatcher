@@ -11,4 +11,8 @@ ignored = [
   "github.com/gogo/protobuf",
   "sigs.k8s.io/yaml",
   "github.com/davecgh/go-spew", # ISC license
+
+  "go.uber.org/atomic",
+  "go.uber.org/multierr",
+  "emperror.dev/errors",
 ]
