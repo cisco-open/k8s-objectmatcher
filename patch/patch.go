@@ -17,9 +17,8 @@ package patch
 import (
 	"fmt"
 
-	json "github.com/json-iterator/go"
-
 	"emperror.dev/errors"
+	json "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
