@@ -17,6 +17,13 @@ integration-test-base: &integration-test-base
     image: ubuntu-1604:201903-01
     docker_layer_caching: true
   steps:
+    # Required by Kubernetes 1.18 and 1.19
+    - run:
+        name: Install conntrack
+        command: |
+          sudo apt-get update -y
+          sudo apt-get install -y conntrack
+
     - run:
         name: Setup minikube
         command: |
