@@ -14,6 +14,7 @@
 package objectmatch
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -93,7 +94,7 @@ func (ctx *IntegrationTestContext) CreateNamespace() error {
 			GenerateName: "integration-",
 		},
 	}
-	namespace, err := ctx.Client.CoreV1().Namespaces().Create(ns)
+	namespace, err := ctx.Client.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -133,7 +134,7 @@ func (ctx *IntegrationTestContext) Setup() error {
 }
 
 func (ctx *IntegrationTestContext) DeleteNamespace() error {
-	err := ctx.Client.CoreV1().Namespaces().Delete(ctx.Namespace, &metav1.DeleteOptions{
+	err := ctx.Client.CoreV1().Namespaces().Delete(context.Background(), ctx.Namespace, metav1.DeleteOptions{
 		GracePeriodSeconds: new(int64),
 	})
 	return err
@@ -196,219 +197,219 @@ func testMatchOnObject(testItem *TestItem) error {
 	if err != nil {
 		return err
 	}
-	deleteOptions := &metav1.DeleteOptions{
+	deleteOptions := metav1.DeleteOptions{
 		GracePeriodSeconds: new(int64),
 	}
 	switch newObject.(type) {
 	default:
 		return errors.WithDetails(errors.New("Unsupported type"), "type", reflect.TypeOf(newObject), "object", newObject)
 	case *rbacv1.ClusterRole:
-		existing, err = testContext.Client.RbacV1().ClusterRoles().Create(newObject.(*rbacv1.ClusterRole))
+		existing, err = testContext.Client.RbacV1().ClusterRoles().Create(context.Background(), newObject.(*rbacv1.ClusterRole), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.RbacV1().ClusterRoles().Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.RbacV1().ClusterRoles().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *rbacv1.Role:
-		existing, err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Create(newObject.(*rbacv1.Role))
+		existing, err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Create(context.Background(), newObject.(*rbacv1.Role), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.RbacV1().Roles(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *rbacv1.ClusterRoleBinding:
-		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(newObject.(*rbacv1.ClusterRoleBinding))
+		existing, err = testContext.Client.RbacV1().ClusterRoleBindings().Create(context.Background(), newObject.(*rbacv1.ClusterRoleBinding), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.RbacV1().ClusterRoleBindings().Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.RbacV1().ClusterRoleBindings().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *rbacv1.RoleBinding:
-		existing, err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Create(newObject.(*rbacv1.RoleBinding))
+		existing, err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Create(context.Background(), newObject.(*rbacv1.RoleBinding), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.RbacV1().RoleBindings(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.Pod:
-		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(newObject.(*v1.Pod))
+		existing, err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.Pod), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().Pods(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.Service:
-		existing, err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Create(newObject.(*v1.Service))
+		existing, err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.Service), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().Services(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.ConfigMap:
-		existing, err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Create(newObject.(*v1.ConfigMap))
+		existing, err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.ConfigMap), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().ConfigMaps(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.Secret:
-		existing, err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Create(newObject.(*v1.Secret))
+		existing, err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.Secret), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().Secrets(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1beta1.CustomResourceDefinition:
-		existing, err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newObject.(*v1beta1.CustomResourceDefinition))
+		existing, err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), newObject.(*v1beta1.CustomResourceDefinition), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(existing.GetName(), deleteOptions)
+			err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *appsv1.DaemonSet:
-		existing, err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Create(newObject.(*appsv1.DaemonSet))
+		existing, err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Create(context.Background(), newObject.(*appsv1.DaemonSet), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.AppsV1().DaemonSets(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *appsv1.Deployment:
-		existing, err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Create(newObject.(*appsv1.Deployment))
+		existing, err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Create(context.Background(), newObject.(*appsv1.Deployment), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.AppsV1().Deployments(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v2beta1.HorizontalPodAutoscaler:
-		existing, err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(newObject.(*v2beta1.HorizontalPodAutoscaler))
+		existing, err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(context.Background(), newObject.(*v2beta1.HorizontalPodAutoscaler), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *admissionregistrationv1beta1.MutatingWebhookConfiguration:
-		existing, err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(newObject.(*admissionregistrationv1beta1.MutatingWebhookConfiguration))
+		existing, err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(context.Background(), newObject.(*admissionregistrationv1beta1.MutatingWebhookConfiguration), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *policyv1beta1.PodDisruptionBudget:
-		existing, err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Create(newObject.(*policyv1beta1.PodDisruptionBudget))
+		existing, err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Create(context.Background(), newObject.(*policyv1beta1.PodDisruptionBudget), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.PersistentVolumeClaim:
-		existing, err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Create(newObject.(*v1.PersistentVolumeClaim))
+		existing, err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.PersistentVolumeClaim), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.ServiceAccount:
-		existing, err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Create(newObject.(*v1.ServiceAccount))
+		existing, err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.ServiceAccount), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().ServiceAccounts(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *unstructured.Unstructured:
 		existing, err = testContext.DynamicClient.Resource(*testItem.gvr).Namespace(testContext.Namespace).
-			Create(newObject.(*unstructured.Unstructured), metav1.CreateOptions{})
+			Create(context.Background(), newObject.(*unstructured.Unstructured), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.DynamicClient.Resource(*testItem.gvr).Delete(existing.GetName(), deleteOptions)
+			err = testContext.DynamicClient.Resource(*testItem.gvr).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *v1.Node:
-		existing, err = testContext.Client.CoreV1().Nodes().Create(newObject.(*v1.Node))
+		existing, err = testContext.Client.CoreV1().Nodes().Create(context.Background(), newObject.(*v1.Node), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.CoreV1().Nodes().Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.CoreV1().Nodes().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
 		}()
 	case *appsv1.StatefulSet:
 		opts = append(opts, patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus())
-		existing, err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Create(newObject.(*appsv1.StatefulSet))
+		existing, err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Create(context.Background(), newObject.(*appsv1.StatefulSet), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Delete(existing.GetName(), deleteOptions)
+			err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s", existing.GetName())
 			}
