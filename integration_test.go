@@ -592,7 +592,6 @@ func TestIntegration(t *testing.T) {
 				pdb.Status.CurrentHealthy = 1
 				pdb.Status.DesiredHealthy = 1
 				pdb.Status.ExpectedPods = 1
-				pdb.Status.PodDisruptionsAllowed = 0
 				pdb.Status.ObservedGeneration = 1
 			}),
 		NewTestMatch("pvc match",
