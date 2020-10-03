@@ -1,7 +1,7 @@
 version: 2
 
 integration-test-environment: &integration-test-environment
-  GO_VERSION: "1.13.4"
+  GO_VERSION: "1.15.2"
   KUBECONFIG: /home/circleci/.kube/config
   MINIKUBE_VERSION: v1.6.2
   MINIKUBE_WANTUPDATENOTIFICATION: false
@@ -83,7 +83,7 @@ integration-test-base: &integration-test-base
 jobs:
   check:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.15
         environment:
           GOFLAG: -mod=readonly
 
