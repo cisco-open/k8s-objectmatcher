@@ -1,11 +1,11 @@
-LICENSEI_VERSION = 0.1.0
+LICENSEI_VERSION = 0.3.1
 GOLANGCI_VERSION = 1.16.0
 
 all: license fmt vet test
 
 .PHONY: license
-license:
-	./scripts/check-header.sh
+license: bin/licensei
+	bin/licensei header
 
 # Run go fmt against code
 fmt:
@@ -32,7 +32,7 @@ bin/licensei-${LICENSEI_VERSION}:
 .PHONY: license-check
 license-check: bin/licensei ## Run license check
 	bin/licensei check
-	./scripts/check-header.sh
+	bin/licensei header
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
