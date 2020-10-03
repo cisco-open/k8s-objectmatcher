@@ -1,7 +1,7 @@
 LICENSEI_VERSION = 0.1.0
 GOLANGCI_VERSION = 1.16.0
 
-all: license fmt vet
+all: license fmt vet test
 
 .PHONY: license
 license:
@@ -14,6 +14,9 @@ fmt:
 # Run go vet against code
 vet:
 	go vet ./...
+
+test:
+	go test ./...
 
 test-integration:
 	cd tests && go test -integration -v ./...
