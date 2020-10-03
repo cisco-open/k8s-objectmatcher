@@ -1,7 +1,7 @@
 LICENSEI_VERSION = 0.1.0
 GOLANGCI_VERSION = 1.16.0
 
-all: license fmt vet
+all: license fmt vet test
 
 .PHONY: license
 license:
@@ -15,8 +15,11 @@ fmt:
 vet:
 	go vet ./...
 
+test:
+	go test ./...
+
 test-integration:
-	go test -integration -v ./...
+	cd tests && go test -integration -v ./...
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
