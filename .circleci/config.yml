@@ -136,23 +136,29 @@ jobs:
           name: Run verification
           command: make
 
+  integration-test-k8s1-19:
+    <<: *integration-test-base
+    environment:
+      <<: *integration-test-environment
+      K8S_VERSION: v1.19.2
+
+  integration-test-k8s1-18:
+    <<: *integration-test-base
+    environment:
+      <<: *integration-test-environment
+      K8S_VERSION: v1.18.9
+
   integration-test-k8s1-17:
     <<: *integration-test-base
     environment:
       <<: *integration-test-environment
-      K8S_VERSION: v1.17.0
-
-  integration-test-k8s1-17-4:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.17.4
+      K8S_VERSION: v1.17.12
 
   integration-test-k8s1-16:
     <<: *integration-test-base
     environment:
       <<: *integration-test-environment
-      K8S_VERSION: v1.16.4
+      K8S_VERSION: v1.16.15
 
   integration-test-k8s1-15:
     <<: *integration-test-base
@@ -189,10 +195,13 @@ workflows:
   ci:
     jobs:
       - check
-      - integration-test-k8s1-17:
+      - integration-test-k8s1-19:
           requires:
             - check
-      - integration-test-k8s1-17-4:
+      - integration-test-k8s1-18:
+          requires:
+            - check
+      - integration-test-k8s1-17:
           requires:
             - check
       - integration-test-k8s1-16:
