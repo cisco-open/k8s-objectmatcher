@@ -15,4 +15,7 @@ ignored = [
   "go.uber.org/atomic",
   "go.uber.org/multierr",
   "emperror.dev/errors",
+  "k8s.io/klog/v2",
+  "sigs.k8s.io/structured-merge-diff/v4",
+  "google.golang.org/protobuf",
 ]
