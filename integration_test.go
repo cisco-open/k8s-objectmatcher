@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
 )
 
 func TestIntegration(t *testing.T) {
@@ -525,8 +524,10 @@ func TestIntegration(t *testing.T) {
 				},
 			}).
 			withLocalChange(func(i interface{}) {
+				var replicas int32
+
 				pod := i.(*appsv1.Deployment)
-				pod.Spec.Replicas = pointer.Int32Ptr(0)
+				pod.Spec.Replicas = &replicas
 			}),
 		NewTestMatch("hpa match",
 			&v2beta1.HorizontalPodAutoscaler{
