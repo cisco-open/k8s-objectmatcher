@@ -21,6 +21,7 @@ import (
 	json "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
@@ -71,9 +72,11 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 	}
 
 	var patch []byte
+	patchType := types.MergePatchType
 
 	switch currentObject.(type) {
 	default:
+		patchType = types.StrategicMergePatchType
 		lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(currentObject)
 		if err != nil {
 			return nil, errors.WrapWithDetails(err, "Failed to lookup patch meta", "current object", currentObject)
@@ -102,18 +105,20 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 	}
 
 	return &PatchResult{
-		Patch:    patch,
-		Current:  current,
-		Modified: modified,
-		Original: original,
+		Patch:     patch,
+		PatchType: patchType,
+		Current:   current,
+		Modified:  modified,
+		Original:  original,
 	}, nil
 }
 
 type PatchResult struct {
-	Patch    []byte
-	Current  []byte
-	Modified []byte
-	Original []byte
+	Patch     []byte
+	Current   []byte
+	Modified  []byte
+	Original  []byte
+	PatchType types.PatchType
 }
 
 func (p *PatchResult) IsEmpty() bool {
