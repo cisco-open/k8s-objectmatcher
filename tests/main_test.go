@@ -114,6 +114,9 @@ func (ctx *IntegrationTestContext) Setup() error {
 	if err != nil {
 		return err
 	}
+	config.QPS = 100
+	config.Burst = 100
+
 	ctx.Client, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create kubernetes client")
