@@ -433,7 +433,7 @@ func TestIntegration(t *testing.T) {
 						},
 					},
 				},
-			}).withIgnoreVersions([]string{"v1.10"}),
+			}),
 		NewTestMatch("crd match for deprecated version spec",
 			&v1beta1.CustomResourceDefinition{
 				ObjectMeta: metav1.ObjectMeta{
@@ -626,7 +626,7 @@ func TestIntegration(t *testing.T) {
 					PodCIDR: "10.0.0.0/24",
 				},
 				// ignore due to already removed field
-			}).withIgnoreVersions([]string{"v1.10"}),
+			}),
 		NewTestDiff("node diff for podcidr",
 			&v1.Node{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-"},
@@ -638,7 +638,7 @@ func TestIntegration(t *testing.T) {
 				n := i.(*v1.Node)
 				n.Spec.PodCIDR = "10.0.0.1/24"
 				// ignore due to already removed field
-			}).withIgnoreVersions([]string{"v1.10"}),
+			}),
 		NewTestMatch("statefulset match for volumeclaimtemplates",
 			&appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-", Namespace: "default"},
