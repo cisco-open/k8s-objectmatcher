@@ -190,6 +190,7 @@ func testMatchOnObject(testItem *TestItem) error {
 	var err error
 	opts := []patch.CalculateOption{
 		patch.IgnoreStatusFields(),
+		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
 	}
 
 	newObject := testItem.object
@@ -403,7 +404,6 @@ func testMatchOnObject(testItem *TestItem) error {
 			}
 		}()
 	case *appsv1.StatefulSet:
-		opts = append(opts, patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus())
 		existing, err = testContext.Client.AppsV1().StatefulSets(newObject.GetNamespace()).Create(context.Background(), newObject.(*appsv1.StatefulSet), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)

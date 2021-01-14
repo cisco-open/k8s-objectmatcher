@@ -20,8 +20,6 @@ import (
 
 	"emperror.dev/errors"
 	json "github.com/json-iterator/go"
-	v1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -191,21 +189,31 @@ func deleteStatusField(obj []byte) ([]byte, error) {
 }
 
 func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
-	sts := v1.StatefulSet{}
-	err := json.Unmarshal(obj, &sts)
+	resource := map[string]interface{}{}
+	err := json.Unmarshal(obj, &resource)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "could not unmarshal byte sequence")
 	}
 
-	for i := range sts.Spec.VolumeClaimTemplates {
-		sts.Spec.VolumeClaimTemplates[i].Kind = ""
-		sts.Spec.VolumeClaimTemplates[i].APIVersion = ""
-		sts.Spec.VolumeClaimTemplates[i].Status = corev1.PersistentVolumeClaimStatus{
-			Phase: corev1.ClaimPending,
+	if spec, ok := resource["spec"]; ok {
+		if spec, ok := spec.(map[string]interface{}); ok {
+			if vcts, ok := spec["volumeClaimTemplates"]; ok {
+				if vcts, ok := vcts.([]interface{}); ok {
+					for _, vct := range vcts {
+						if vct, ok := vct.(map[string]interface{}); ok {
+							vct["kind"] = ""
+							vct["apiVersion"] = ""
+							vct["status"] = map[string]string{
+								"phase": "Pending",
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
-	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(sts)
+	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(resource)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "could not marshal byte sequence")
 	}
