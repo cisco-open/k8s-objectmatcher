@@ -579,7 +579,30 @@ func TestIntegration(t *testing.T) {
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1beta12.PodDisruptionBudgetSpec{
 					MinAvailable: intstrRef(intstr.FromInt(1)),
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "example",
+						},
+					},
 				},
+			}),
+		NewTestDiff("pdb diff on matchlabels",
+			&v1beta12.PodDisruptionBudget{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1beta12.PodDisruptionBudgetSpec{
+					MinAvailable: intstrRef(intstr.FromInt(1)),
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "example",
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pdb := i.(*v1beta12.PodDisruptionBudget)
+				pdb.Spec.Selector.MatchLabels = map[string]string{
+					"app": "example2",
+				}
 			}),
 		NewTestMatch("pdb match even though status changes",
 			&v1beta12.PodDisruptionBudget{
