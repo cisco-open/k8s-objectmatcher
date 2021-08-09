@@ -145,6 +145,18 @@ jobs:
           name: Run verification
           command: make
 
+  integration-test-k8s1-21:
+    <<: *integration-test-base
+    environment:
+      <<: *integration-test-environment
+      K8S_VERSION: v1.21.3
+
+  integration-test-k8s1-20:
+    <<: *integration-test-base
+    environment:
+      <<: *integration-test-environment
+      K8S_VERSION: v1.20.9
+
   integration-test-k8s1-19:
     <<: *integration-test-base
     environment:
@@ -163,47 +175,17 @@ jobs:
       <<: *integration-test-environment
       K8S_VERSION: v1.17.12
 
-  integration-test-k8s1-16:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.16.15
-
-  integration-test-k8s1-15:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.15.7
-
-  integration-test-k8s1-14:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.14.2
-
-  integration-test-k8s1-13:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.13.6
-
-  integration-test-k8s1-12:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.12.9
-
-  integration-test-k8s1-11:
-    <<: *integration-test-base
-    environment:
-      <<: *integration-test-environment
-      K8S_VERSION: v1.11.9
-
 workflows:
   version: 2
   ci:
     jobs:
       - check
+      - integration-test-k8s1-21:
+          requires:
+            - check
+      - integration-test-k8s1-20:
+          requires:
+            - check
       - integration-test-k8s1-19:
           requires:
             - check
@@ -211,14 +193,5 @@ workflows:
           requires:
             - check
       - integration-test-k8s1-17:
-          requires:
-            - check
-      - integration-test-k8s1-16:
-          requires:
-            - check
-      - integration-test-k8s1-15:
-          requires:
-            - check
-      - integration-test-k8s1-14:
           requires:
             - check
