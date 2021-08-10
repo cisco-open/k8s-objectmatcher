@@ -34,17 +34,15 @@ func IgnorePDBSelector() CalculateOption {
 			return []byte{}, []byte{}, errors.Wrap(err, "could not unmarshal byte sequence for modified")
 		}
 
-		if isPDB(currentResource) || isPDB(modifiedResource) {
-			if reflect.DeepEqual(getPDBSelector(currentResource), getPDBSelector(modifiedResource)) {
-				var err error
-				current, err = deletePDBSelector(currentResource)
-				if err != nil {
-					return nil, nil, errors.Wrap(err, "delete pdb selector from current")
-				}
-				modified, err = deletePDBSelector(modifiedResource)
-				if err != nil {
-					return nil, nil, errors.Wrap(err, "delete pdb selector from modified")
-				}
+		if isPDB(currentResource) && isPDB(modifiedResource) && reflect.DeepEqual(getPDBSelector(currentResource), getPDBSelector(modifiedResource)) {
+			var err error
+			current, err = deletePDBSelector(currentResource)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "delete pdb selector from current")
+			}
+			modified, err = deletePDBSelector(modifiedResource)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "delete pdb selector from modified")
 			}
 		}
 

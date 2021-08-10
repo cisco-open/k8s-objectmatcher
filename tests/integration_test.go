@@ -576,6 +576,10 @@ func TestIntegration(t *testing.T) {
 			}),
 		NewTestMatch("pdb match",
 			&v1beta12.PodDisruptionBudget{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: v1beta12.SchemeGroupVersion.String(),
+					Kind:       "PodDisruptionBudget",
+				},
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1beta12.PodDisruptionBudgetSpec{
 					MinAvailable: intstrRef(intstr.FromInt(1)),
@@ -588,6 +592,10 @@ func TestIntegration(t *testing.T) {
 			}),
 		NewTestDiff("pdb diff on matchlabels",
 			&v1beta12.PodDisruptionBudget{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: v1beta12.SchemeGroupVersion.String(),
+					Kind:       "PodDisruptionBudget",
+				},
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1beta12.PodDisruptionBudgetSpec{
 					MinAvailable: intstrRef(intstr.FromInt(1)),
