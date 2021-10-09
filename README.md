@@ -65,6 +65,7 @@ To help in these scenarios there are the following options to be used when calcu
 - `IgnoreStatusFields`
 - `IgnoreVolumeClaimTemplateTypeMetaAndStatus`
 - `IgnorePDBSelector`
+- `IgnoreMetaDataFields`
 
 Example:
 ```
@@ -90,6 +91,10 @@ This CalculateOption clears volumeClaimTemplate fields from both objects before 
 
 Checks `selector` fields of PDB objects before comparing and removes them if they match. `reflect.DeepEquals` is used for the equality check. 
 This is required because map fields using `patchStrategy:"replace"` will always diff regardless if they are otherwise equal.
+
+#### IgnoreMetaDataFields
+
+This CalculateOptions removes metadata fields from both objects before comparing. It is useful if you only want differences in the Spec field.
 
 ## Contributing
 

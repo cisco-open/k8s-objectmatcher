@@ -41,6 +41,22 @@ func IgnoreStatusFields() CalculateOption {
 	}
 }
 
+func IgnoreMetaDataFields() CalculateOption {
+	return func(current, modified []byte) ([]byte, []byte, error) {
+		current, err := deleteMetaDataField(current)
+		if err != nil {
+			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from current byte sequence")
+		}
+
+		modified, err = deleteMetaDataField(modified)
+		if err != nil {
+			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from modified byte sequence")
+		}
+
+		return current, modified, nil
+	}
+}
+
 func IgnoreVolumeClaimTemplateTypeMetaAndStatus() CalculateOption {
 	return func(current, modified []byte) ([]byte, []byte, error) {
 		current, err := deleteVolumeClaimTemplateFields(current)
@@ -171,6 +187,21 @@ func deleteNullInSlice(m []interface{}) ([]interface{}, error) {
 		}
 	}
 	return filteredSlice, nil
+}
+
+func deleteMetaDataField(obj []byte) ([]byte, error) {
+	var objectMap map[string]interface{}
+	err := json.Unmarshal(obj, &objectMap)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "could not unmarshal byte sequence")
+	}
+	delete(objectMap, "metadata")
+	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(objectMap)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "could not marshal byte sequence")
+	}
+
+	return obj, nil
 }
 
 func deleteStatusField(obj []byte) ([]byte, error) {
