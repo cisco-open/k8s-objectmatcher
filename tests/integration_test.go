@@ -626,6 +626,20 @@ func TestIntegration(t *testing.T) {
 				pdb.Status.ExpectedPods = 1
 				pdb.Status.ObservedGeneration = 1
 			}),
+		NewTestMatch("pdb match even though metadata changes",
+			&v1beta12.PodDisruptionBudget{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1beta12.PodDisruptionBudgetSpec{
+					MinAvailable: intstrRef(intstr.FromInt(1)),
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pdb := i.(*v1beta12.PodDisruptionBudget)
+				pdb.Status.CurrentHealthy = 1
+				pdb.Status.DesiredHealthy = 1
+				pdb.Status.ExpectedPods = 1
+				pdb.Status.ObservedGeneration = 1
+			}),
 		NewTestMatch("pvc match",
 			&v1.PersistentVolumeClaim{
 				ObjectMeta: standardObjectMeta(),

@@ -193,6 +193,7 @@ func testMatchOnObject(testItem *TestItem) error {
 		patch.IgnoreStatusFields(),
 		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
 		patch.IgnorePDBSelector(),
+		patch.IgnoreField("metadata"),
 	}
 
 	newObject := testItem.object

@@ -41,14 +41,14 @@ func IgnoreStatusFields() CalculateOption {
 	}
 }
 
-func IgnoreMetaDataFields() CalculateOption {
+func IgnoreField(field string) CalculateOption {
 	return func(current, modified []byte) ([]byte, []byte, error) {
-		current, err := deleteMetaDataField(current)
+		current, err := deleteDataField(current, field)
 		if err != nil {
 			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from current byte sequence")
 		}
 
-		modified, err = deleteMetaDataField(modified)
+		modified, err = deleteDataField(modified, field)
 		if err != nil {
 			return []byte{}, []byte{}, errors.Wrap(err, "could not delete status field from modified byte sequence")
 		}
@@ -189,13 +189,13 @@ func deleteNullInSlice(m []interface{}) ([]interface{}, error) {
 	return filteredSlice, nil
 }
 
-func deleteMetaDataField(obj []byte) ([]byte, error) {
+func deleteDataField(obj []byte, fieldName string) ([]byte, error) {
 	var objectMap map[string]interface{}
 	err := json.Unmarshal(obj, &objectMap)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "could not unmarshal byte sequence")
 	}
-	delete(objectMap, "metadata")
+	delete(objectMap, fieldName)
 	obj, err = json.ConfigCompatibleWithStandardLibrary.Marshal(objectMap)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "could not marshal byte sequence")
