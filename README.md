@@ -94,7 +94,7 @@ This is required because map fields using `patchStrategy:"replace"` will always 
 
 #### IgnoreField
 
-This CalculateOptions removes an arbitrary field from both objects before comparing. A common usage might be to remove the metadata fields by using the `IgnoreField("metadata") option.
+This CalculateOptions removes an arbitrary field from objects before comparing them. A common usage might be to remove the metadata fields by using the `IgnoreField("metadata") option.
 
 ## Contributing
 

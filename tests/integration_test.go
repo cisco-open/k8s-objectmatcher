@@ -179,6 +179,27 @@ func TestIntegration(t *testing.T) {
 				pod := i.(*v1.Pod)
 				pod.Spec.Hostname = "changed locally"
 			}),
+		NewTestMatch("pod matchs when an ignored field has different values locally and remotely",
+			&v1.Pod{
+
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Annotations = map[string]string{"key1" : "local"}
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Annotations = map[string]string{"key1" : "remote"}
+			}),
 		NewTestMatch("pod matches when there is a remote change on a field (Spec.Hostname) that DOES NOT EXIST in the local object",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
@@ -613,20 +634,6 @@ func TestIntegration(t *testing.T) {
 				}
 			}),
 		NewTestMatch("pdb match even though status changes",
-			&v1beta12.PodDisruptionBudget{
-				ObjectMeta: standardObjectMeta(),
-				Spec: v1beta12.PodDisruptionBudgetSpec{
-					MinAvailable: intstrRef(intstr.FromInt(1)),
-				},
-			}).
-			withRemoteChange(func(i interface{}) {
-				pdb := i.(*v1beta12.PodDisruptionBudget)
-				pdb.Status.CurrentHealthy = 1
-				pdb.Status.DesiredHealthy = 1
-				pdb.Status.ExpectedPods = 1
-				pdb.Status.ObservedGeneration = 1
-			}),
-		NewTestMatch("pdb match even though metadata changes",
 			&v1beta12.PodDisruptionBudget{
 				ObjectMeta: standardObjectMeta(),
 				Spec: v1beta12.PodDisruptionBudgetSpec{
