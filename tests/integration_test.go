@@ -725,6 +725,27 @@ func TestIntegration(t *testing.T) {
 			n := i.(*appsv1.StatefulSet)
 			n.Spec.Template.ObjectMeta.Labels = map[string]string{"c": "d"}
 		}),
+		NewTestMatch("Ignore Metadata field",
+			&v1.Pod{
+
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:    "test-container",
+							Image:   "test-image",
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+			pod := i.(*v1.Pod)
+			pod.Labels = map[string]string{"a": "b"}
+		}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Labels = map[string]string{"c": "d"}
+		}),
 	}
 	runAll(t, tests)
 }
@@ -748,7 +769,12 @@ func runAll(t *testing.T, tests []*TestItem) {
 		if testing.Verbose() {
 			log.Printf("> %s", test.name)
 		}
-		err := testMatchOnObject(test)
+		var err error
+		if test.name == "Ignore Metadata field" {
+			err = testMatchOnObject(test, "metadata")
+		} else {
+			err = testMatchOnObject(test, "")
+		}
 		if err != nil {
 			if *failonerror {
 				t.Fatalf("Test '%s' failed: %s %s", test.name, err, errors.GetDetails(err))

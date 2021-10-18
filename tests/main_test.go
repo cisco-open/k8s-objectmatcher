@@ -186,13 +186,14 @@ func (t *TestItem) withIgnoreVersions(v []string) *TestItem {
 	return t
 }
 
-func testMatchOnObject(testItem *TestItem) error {
+func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 	var existing metav1.Object
 	var err error
 	opts := []patch.CalculateOption{
 		patch.IgnoreStatusFields(),
 		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
 		patch.IgnorePDBSelector(),
+		patch.IgnoreField(ignoreField),
 	}
 
 	newObject := testItem.object
