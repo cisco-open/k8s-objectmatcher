@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"emperror.dev/errors"
+	jsonpatch "github.com/evanphx/json-patch"
 	json "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -95,10 +96,7 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 			}
 		}
 	case *unstructured.Unstructured:
-		patch, err = jsonmergepatch.CreateThreeWayJSONMergePatch(original, modified, current)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to generate merge patch")
-		}
+		patch, err = unstructuredJsonMergePatch(original, modified, current)
 	}
 
 	return &PatchResult{
@@ -122,4 +120,22 @@ func (p *PatchResult) IsEmpty() bool {
 
 func (p *PatchResult) String() string {
 	return fmt.Sprintf("\nPatch: %s \nCurrent: %s\nModified: %s\nOriginal: %s\n", p.Patch, p.Current, p.Modified, p.Original)
+}
+
+func unstructuredJsonMergePatch(original, modified, current []byte) ([]byte, error) {
+	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(original, modified, current)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to generate merge patch")
+	}
+	// Apply the patch to the current object and create a merge patch to see if there has any effective changes been made
+	if string(patch) != "{}" {
+		// apply the patch
+		patchedCurrent, err := jsonpatch.MergePatch(current, patch)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to ")
+		}
+		// check if the patched version is different at all
+		patch, err = jsonpatch.CreateMergePatch(current, patchedCurrent)
+	}
+	return patch, err
 }
