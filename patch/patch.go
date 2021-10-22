@@ -97,6 +97,9 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 		}
 	case *unstructured.Unstructured:
 		patch, err = unstructuredJsonMergePatch(original, modified, current)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to generate merge patch")
+		}
 	}
 
 	return &PatchResult{
@@ -132,10 +135,13 @@ func unstructuredJsonMergePatch(original, modified, current []byte) ([]byte, err
 		// apply the patch
 		patchedCurrent, err := jsonpatch.MergePatch(current, patch)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to ")
+			return nil, errors.Wrap(err, "Failed to merge generated patch to current object")
 		}
-		// check if the patched version is different at all
+		// create the patch again, but now between the current and the patched version of the current object
 		patch, err = jsonpatch.CreateMergePatch(current, patchedCurrent)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to create patch between the current and patched current object")
+		}
 	}
 	return patch, err
 }
