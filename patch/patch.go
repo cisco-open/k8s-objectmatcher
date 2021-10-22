@@ -70,6 +70,13 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 		return nil, errors.Wrap(err, "Failed to get original configuration")
 	}
 
+	for _, opt := range opts {
+		original, _, err = opt(original, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to apply option function to original object")
+		}
+	}
+
 	var patch []byte
 
 	switch currentObject.(type) {
