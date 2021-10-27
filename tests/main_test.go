@@ -112,6 +112,10 @@ func (ctx *IntegrationTestContext) Setup() error {
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigOverride},
 		&clientcmd.ConfigOverrides{CurrentContext: *kubecontext},
 	).ClientConfig()
+
+	config.Burst = 100
+	config.QPS = 100
+
 	if err != nil {
 		return err
 	}

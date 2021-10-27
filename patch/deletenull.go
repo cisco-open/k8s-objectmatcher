@@ -257,7 +257,7 @@ func isZero(v reflect.Value) bool {
 	default:
 		z := reflect.Zero(v.Type())
 		return v.Interface() == z.Interface()
-	case reflect.Float64, reflect.Int64:
+	case reflect.Float64, reflect.Int64, reflect.Bool:
 		return false
 	case reflect.Func, reflect.Map, reflect.Slice:
 		return v.IsNil()
