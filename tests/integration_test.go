@@ -59,6 +59,148 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
+		NewTestDiff("pod does not match if a bool pointer value is explicitly set locally (false)",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name: "test-container", Image: "test-image",
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.AutomountServiceAccountToken = boolRef(false)
+			}),
+		NewTestMatch("pod does match if a bool pointer value is set only remotely, since we don't set it locally (true)",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name: "test-container", Image: "test-image",
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.AutomountServiceAccountToken = boolRef(true)
+			}),
+		NewTestMatch("pod does match if a bool pointer value is set only remotely, since we don't set it locally (false)",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name: "test-container", Image: "test-image",
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.AutomountServiceAccountToken = boolRef(false)
+			}),
+		NewTestDiff("pod does not match if a bool pointer value is set remotely by a defaulter but a different value locally",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name: "test-container", Image: "test-image",
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.AutomountServiceAccountToken = boolRef(true)
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.AutomountServiceAccountToken = boolRef(false)
+			}),
+		NewTestDiff("pod does not match if a bool value is set locally (true)",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name: "test-container", Image: "test-image",
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			}).
+			withLocalChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.HostIPC = true
+			}),
+		NewTestMatch("pod does match if a bool pointer value is set only remotely (true)",
+			&v1.Pod{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name: "test-container", Image: "test-image",
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "empty",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			}).
+			withRemoteChange(func(i interface{}) {
+				pod := i.(*v1.Pod)
+				pod.Spec.HostIPC = true
+			}),
 		NewTestDiff("pod does not match when a slice item gets removed",
 			&v1.Pod{
 				ObjectMeta: standardObjectMeta(),
@@ -732,20 +874,20 @@ func TestIntegration(t *testing.T) {
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Name:    "test-container",
-							Image:   "test-image",
+							Name:  "test-container",
+							Image: "test-image",
 						},
 					},
 				},
 			}).
 			withRemoteChange(func(i interface{}) {
-			pod := i.(*v1.Pod)
-			pod.Labels = map[string]string{"a": "b"}
-		}).
+				pod := i.(*v1.Pod)
+				pod.Labels = map[string]string{"a": "b"}
+			}).
 			withLocalChange(func(i interface{}) {
 				pod := i.(*v1.Pod)
 				pod.Labels = map[string]string{"c": "d"}
-		}),
+			}),
 	}
 	runAll(t, tests)
 }
@@ -812,4 +954,8 @@ func scopeRef(scopeType admregv1beta1.ScopeType) *admregv1beta1.ScopeType {
 
 func volumeModeRef(mode v1.PersistentVolumeMode) *v1.PersistentVolumeMode {
 	return &mode
+}
+
+func boolRef(b bool) *bool {
+	return &b
 }
