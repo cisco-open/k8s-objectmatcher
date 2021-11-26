@@ -20,13 +20,13 @@ import (
 	"testing"
 
 	"emperror.dev/errors"
-	admregv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
 	v1beta12 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	crdv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -554,43 +554,29 @@ func TestIntegration(t *testing.T) {
 				},
 			}),
 		NewTestMatch("crd match",
-			&v1beta1.CustomResourceDefinition{
+			&crdv1.CustomResourceDefinition{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "tests.test.org",
 				},
-				Spec: v1beta1.CustomResourceDefinitionSpec{
+				Spec: crdv1.CustomResourceDefinitionSpec{
 					Group: "test.org",
-					Names: v1beta1.CustomResourceDefinitionNames{
+					Names: crdv1.CustomResourceDefinitionNames{
 						Plural:   "tests",
 						Singular: "test",
 						Kind:     "Test",
 						ListKind: "Tests",
 					},
-					Scope: v1beta1.NamespaceScoped,
-					Versions: []v1beta1.CustomResourceDefinitionVersion{
+					Scope: crdv1.NamespaceScoped,
+					Versions: []crdv1.CustomResourceDefinitionVersion{
 						{
 							Name:    "v1",
 							Served:  true,
 							Storage: true,
+							Schema: &crdv1.CustomResourceValidation{OpenAPIV3Schema: &crdv1.JSONSchemaProps{
+								Type: "object",
+							}},
 						},
 					},
-				},
-			}).withIgnoreVersions([]string{"v1.10"}),
-		NewTestMatch("crd match for deprecated version spec",
-			&v1beta1.CustomResourceDefinition{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "btests.test.org",
-				},
-				Spec: v1beta1.CustomResourceDefinitionSpec{
-					Group: "test.org",
-					Names: v1beta1.CustomResourceDefinitionNames{
-						Plural:   "btests",
-						Singular: "btest",
-						Kind:     "Btest",
-						ListKind: "Btests",
-					},
-					Scope:   v1beta1.NamespaceScoped,
-					Version: "v1",
 				},
 			}),
 		NewTestMatch("daemonset match",
@@ -685,34 +671,36 @@ func TestIntegration(t *testing.T) {
 				},
 			}),
 		NewTestMatch("mutating webhook configuration",
-			&admregv1beta1.MutatingWebhookConfiguration{
+			&admregv1.MutatingWebhookConfiguration{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: "test-",
 				},
-				Webhooks: []admregv1beta1.MutatingWebhook{
+				Webhooks: []admregv1.MutatingWebhook{
 					{
 						Name: "a.b.c",
-						ClientConfig: admregv1beta1.WebhookClientConfig{
-							Service: &admregv1beta1.ServiceReference{
+						ClientConfig: admregv1.WebhookClientConfig{
+							Service: &admregv1.ServiceReference{
 								Name:      "test",
 								Namespace: testContext.Namespace,
 								Path:      strRef("/inject"),
 							},
 							CABundle: nil,
 						},
-						Rules: []admregv1beta1.RuleWithOperations{
+						Rules: []admregv1.RuleWithOperations{
 							{
-								Operations: []admregv1beta1.OperationType{
-									admregv1beta1.Create,
+								Operations: []admregv1.OperationType{
+									admregv1.Create,
 								},
-								Rule: admregv1beta1.Rule{
+								Rule: admregv1.Rule{
 									Resources:   []string{"pods"},
 									APIGroups:   []string{"", "apps"},
 									APIVersions: []string{"*"},
-									Scope:       scopeRef(admregv1beta1.AllScopes),
+									Scope:       scopeRef(admregv1.AllScopes),
 								},
 							},
 						},
+						SideEffects:             sideEffectRef(admregv1.SideEffectClassNone),
+						AdmissionReviewVersions: []string{"v1"},
 					},
 				},
 			}),
@@ -798,8 +786,7 @@ func TestIntegration(t *testing.T) {
 				Spec: v1.NodeSpec{
 					PodCIDR: "10.0.0.0/24",
 				},
-				// ignore due to already removed field
-			}).withIgnoreVersions([]string{"v1.10"}),
+			}),
 		NewTestDiff("node diff for podcidr",
 			&v1.Node{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-"},
@@ -810,8 +797,7 @@ func TestIntegration(t *testing.T) {
 			withLocalChange(func(i interface{}) {
 				n := i.(*v1.Node)
 				n.Spec.PodCIDR = "10.0.0.1/24"
-				// ignore due to already removed field
-			}).withIgnoreVersions([]string{"v1.10"}),
+			}),
 		NewTestMatch("statefulset match for volumeclaimtemplates",
 			&appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "test-", Namespace: "default"},
@@ -948,8 +934,12 @@ func versionPrefixMatch(s string, l []string) bool {
 	return false
 }
 
-func scopeRef(scopeType admregv1beta1.ScopeType) *admregv1beta1.ScopeType {
+func scopeRef(scopeType admregv1.ScopeType) *admregv1.ScopeType {
 	return &scopeType
+}
+
+func sideEffectRef(sideEffect admregv1.SideEffectClass) *admregv1.SideEffectClass {
+	return &sideEffect
 }
 
 func volumeModeRef(mode v1.PersistentVolumeMode) *v1.PersistentVolumeMode {
