@@ -24,13 +24,13 @@ import (
 
 	"emperror.dev/errors"
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	crdv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -299,13 +299,13 @@ func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
 		}()
-	case *v1beta1.CustomResourceDefinition:
-		existing, err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), newObject.(*v1beta1.CustomResourceDefinition), metav1.CreateOptions{})
+	case *crdv1.CustomResourceDefinition:
+		existing, err = testContext.ExtensionsClient.ApiextensionsV1().CustomResourceDefinitions().Create(context.Background(), newObject.(*crdv1.CustomResourceDefinition), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.ExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(context.Background(), existing.GetName(), deleteOptions)
+			err = testContext.ExtensionsClient.ApiextensionsV1().CustomResourceDefinitions().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
@@ -343,13 +343,13 @@ func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
 		}()
-	case *admissionregistrationv1beta1.MutatingWebhookConfiguration:
-		existing, err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(context.Background(), newObject.(*admissionregistrationv1beta1.MutatingWebhookConfiguration), metav1.CreateOptions{})
+	case *admregv1.MutatingWebhookConfiguration:
+		existing, err = testContext.Client.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(context.Background(), newObject.(*admregv1.MutatingWebhookConfiguration), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(context.Background(), existing.GetName(), deleteOptions)
+			err = testContext.Client.AdmissionregistrationV1().MutatingWebhookConfigurations().Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
