@@ -1,5 +1,5 @@
-LICENSEI_VERSION = 0.4.0
-GOLANGCI_VERSION = 1.16.0
+LICENSEI_VERSION = 0.5.0
+GOLANGCI_VERSION = 1.44.0
 
 all: license fmt vet test
 
@@ -42,7 +42,7 @@ bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
 	@ln -sf golangci-lint-${GOLANGCI_VERSION} bin/golangci-lint
 bin/golangci-lint-${GOLANGCI_VERSION}:
 	@mkdir -p bin
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/v${GOLANGCI_VERSION}/install.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
 
 .PHONY: lint

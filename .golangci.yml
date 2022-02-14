@@ -15,9 +15,9 @@ linters:
     enable:
         - misspell
         - gofmt
-        - golint
         - goimports
     disable:
+        - golint
         - errcheck
         - gas
         - megacheck
