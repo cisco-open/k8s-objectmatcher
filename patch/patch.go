@@ -25,6 +25,10 @@ import (
 
 var DefaultPatchMaker = NewPatchMaker(DefaultAnnotator, &K8sStrategicMergePatcher{}, &BaseJSONMergePatcher{})
 
+type Maker interface {
+	Calculate(currentObject, modifiedObject runtime.Object, opts ...CalculateOption) (*PatchResult, error)
+}
+
 type PatchMaker struct {
 	annotator *Annotator
 
@@ -32,7 +36,7 @@ type PatchMaker struct {
 	jsonMergePatcher      JSONMergePatcher
 }
 
-func NewPatchMaker(annotator *Annotator, strategicMergePatcher StrategicMergePatcher, jsonMergePatcher JSONMergePatcher) *PatchMaker {
+func NewPatchMaker(annotator *Annotator, strategicMergePatcher StrategicMergePatcher, jsonMergePatcher JSONMergePatcher) Maker {
 	return &PatchMaker{
 		annotator: annotator,
 
