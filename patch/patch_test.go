@@ -92,7 +92,7 @@ func Test_unstructuredJsonMergePatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := unstructuredJsonMergePatch(
+			got, err := DefaultPatchMaker.unstructuredJsonMergePatch(
 				mustFromUnstructured(tt.args.original),
 				mustFromUnstructured(tt.args.modified),
 				mustFromUnstructured(tt.args.current))
