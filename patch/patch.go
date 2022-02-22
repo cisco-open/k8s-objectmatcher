@@ -18,23 +18,30 @@ import (
 	"fmt"
 
 	"emperror.dev/errors"
-	jsonpatch "github.com/evanphx/json-patch"
 	json "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
-var DefaultPatchMaker = NewPatchMaker(DefaultAnnotator)
+var DefaultPatchMaker = NewPatchMaker(DefaultAnnotator, &K8sStrategicMergePatcher{}, &BaseJSONMergePatcher{})
+
+type Maker interface {
+	Calculate(currentObject, modifiedObject runtime.Object, opts ...CalculateOption) (*PatchResult, error)
+}
 
 type PatchMaker struct {
 	annotator *Annotator
+
+	strategicMergePatcher StrategicMergePatcher
+	jsonMergePatcher      JSONMergePatcher
 }
 
-func NewPatchMaker(annotator *Annotator) *PatchMaker {
+func NewPatchMaker(annotator *Annotator, strategicMergePatcher StrategicMergePatcher, jsonMergePatcher JSONMergePatcher) Maker {
 	return &PatchMaker{
 		annotator: annotator,
+
+		strategicMergePatcher: strategicMergePatcher,
+		jsonMergePatcher:      jsonMergePatcher,
 	}
 }
 
@@ -75,28 +82,24 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 
 	switch currentObject.(type) {
 	default:
-		lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(currentObject)
-		if err != nil {
-			return nil, errors.WrapWithDetails(err, "Failed to lookup patch meta", "current object", currentObject)
-		}
-		patch, err = strategicpatch.CreateThreeWayMergePatch(original, modified, current, lookupPatchMeta, true)
+		patch, err = p.strategicMergePatcher.CreateThreeWayMergePatch(original, modified, current, currentObject)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to generate strategic merge patch")
 		}
 		// $setElementOrder can make it hard to decide whether there is an actual diff or not.
 		// In cases like that trying to apply the patch locally on current will make it clear.
 		if string(patch) != "{}" {
-			patchCurrent, err := strategicpatch.StrategicMergePatch(current, patch, currentObject)
+			patchCurrent, err := p.strategicMergePatcher.StrategicMergePatch(current, patch, currentObject)
 			if err != nil {
 				return nil, errors.Wrap(err, "Failed to apply patch again to check for an actual diff")
 			}
-			patch, err = strategicpatch.CreateTwoWayMergePatch(current, patchCurrent, currentObject)
+			patch, err = p.strategicMergePatcher.CreateTwoWayMergePatch(current, patchCurrent, currentObject)
 			if err != nil {
 				return nil, errors.Wrap(err, "Failed to create patch again to check for an actual diff")
 			}
 		}
 	case *unstructured.Unstructured:
-		patch, err = unstructuredJsonMergePatch(original, modified, current)
+		patch, err = p.unstructuredJsonMergePatch(original, modified, current)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to generate merge patch")
 		}
@@ -108,6 +111,27 @@ func (p *PatchMaker) Calculate(currentObject, modifiedObject runtime.Object, opt
 		Modified: modified,
 		Original: original,
 	}, nil
+}
+
+func (p *PatchMaker) unstructuredJsonMergePatch(original, modified, current []byte) ([]byte, error) {
+	patch, err := p.jsonMergePatcher.CreateThreeWayJSONMergePatch(original, modified, current)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to generate merge patch")
+	}
+	// Apply the patch to the current object and create a merge patch to see if there has any effective changes been made
+	if string(patch) != "{}" {
+		// apply the patch
+		patchedCurrent, err := p.jsonMergePatcher.MergePatch(current, patch)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to merge generated patch to current object")
+		}
+		// create the patch again, but now between the current and the patched version of the current object
+		patch, err = p.jsonMergePatcher.CreateMergePatch(current, patchedCurrent)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to create patch between the current and patched current object")
+		}
+	}
+	return patch, err
 }
 
 type PatchResult struct {
@@ -123,25 +147,4 @@ func (p *PatchResult) IsEmpty() bool {
 
 func (p *PatchResult) String() string {
 	return fmt.Sprintf("\nPatch: %s \nCurrent: %s\nModified: %s\nOriginal: %s\n", p.Patch, p.Current, p.Modified, p.Original)
-}
-
-func unstructuredJsonMergePatch(original, modified, current []byte) ([]byte, error) {
-	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(original, modified, current)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to generate merge patch")
-	}
-	// Apply the patch to the current object and create a merge patch to see if there has any effective changes been made
-	if string(patch) != "{}" {
-		// apply the patch
-		patchedCurrent, err := jsonpatch.MergePatch(current, patch)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to merge generated patch to current object")
-		}
-		// create the patch again, but now between the current and the patched version of the current object
-		patch, err = jsonpatch.CreateMergePatch(current, patchedCurrent)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to create patch between the current and patched current object")
-		}
-	}
-	return patch, err
 }
