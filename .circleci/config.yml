@@ -1,7 +1,7 @@
 version: 2
 
 integration-test-environment: &integration-test-environment
-  GO_VERSION: "1.15.2"
+  GO_VERSION: "1.17"
   KUBECONFIG: /home/circleci/.kube/config
   MINIKUBE_VERSION: v1.22.0
   MINIKUBE_WANTUPDATENOTIFICATION: false
