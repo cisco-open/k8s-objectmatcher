@@ -1,8 +1,8 @@
 ![license](http://img.shields.io/badge/license-Apache%20v2-orange.svg)
 [![Go Docs Badge]][Go Docs Link]
 
-[Go Docs Badge]: https://pkg.go.dev/badge/github.com/banzaicloud/k8s-objectmatcher
-[Go Docs Link]: https://pkg.go.dev/github.com/banzaicloud/k8s-objectmatcher
+[Go Docs Badge]: https://pkg.go.dev/badge/github.com/banzaicloud/k8s-objectmatcher/patch
+[Go Docs Link]: https://pkg.go.dev/github.com/banzaicloud/k8s-objectmatcher/patch
 
 # Kubernetes object matcher
 
@@ -76,7 +76,7 @@ Example:
 	opts := []patch.CalculateOption{
 		patch.IgnoreStatusFields(),
 	}
-	
+
 	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object), opts...)
 	if err != nil {
 		return err
