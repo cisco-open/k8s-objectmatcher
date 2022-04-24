@@ -1,4 +1,8 @@
 ![license](http://img.shields.io/badge/license-Apache%20v2-orange.svg)
+[![Go Docs Badge]][Go Docs Link]
+
+[Go Docs Badge]: https://pkg.go.dev/badge/github.com/banzaicloud/k8s-objectmatcher
+[Go Docs Link]: https://pkg.go.dev/github.com/banzaicloud/k8s-objectmatcher
 
 # Kubernetes object matcher
 
@@ -95,7 +99,6 @@ This is required because map fields using `patchStrategy:"replace"` will always 
 #### IgnoreField("field-name-to-ignore")
 
 This CalculateOption removes the field provided (as a string) in the call before comparing them. A common usage might be to remove the metadata fields by using the `IgnoreField("metadata")` option.
-
 
 ## Contributing
 
