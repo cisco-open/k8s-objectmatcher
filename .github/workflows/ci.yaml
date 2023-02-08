@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.18", "1.19", "1.20"]
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Test
+        run: make test
+
+  integration-test:
+    name: Integration test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kube: ["1.19", "1.20", "1.21", "1.22", "1.23", "1.24"]
+        # kube: ["1.19", "1.20", "1.21", "1.22", "1.23", "1.24", "1.25", "1.26"]
+    env:
+      KUBECONFIG: ${{ github.workspace }}/.kube/config
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # See https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
+      - name: Determine KinD node image version
+        id: node_image
+        run: |
+          case ${{ matrix.kube }} in
+            1.19)
+              NODE_IMAGE=kindest/node:v1.19.16@sha256:476cb3269232888437b61deca013832fee41f9f074f9bed79f57e4280f7c48b7 ;;
+            1.20)
+              NODE_IMAGE=kindest/node:v1.20.15@sha256:a32bf55309294120616886b5338f95dd98a2f7231519c7dedcec32ba29699394 ;;
+            1.21)
+              NODE_IMAGE=kindest/node:v1.21.14@sha256:9d9eb5fb26b4fbc0c6d95fa8c790414f9750dd583f5d7cee45d92e8c26670aa1 ;;
+            1.22)
+              NODE_IMAGE=kindest/node:v1.22.15@sha256:7d9708c4b0873f0fe2e171e2b1b7f45ae89482617778c1c875f1053d4cef2e41 ;;
+            1.23)
+              NODE_IMAGE=kindest/node:v1.23.13@sha256:ef453bb7c79f0e3caba88d2067d4196f427794086a7d0df8df4f019d5e336b61 ;;
+            1.24)
+              NODE_IMAGE=kindest/node:v1.24.7@sha256:577c630ce8e509131eab1aea12c022190978dd2f745aac5eb1fe65c0807eb315 ;;
+            # Integration tests don't pass on these versions due to API incompatibilities
+            # 1.25)
+            #   NODE_IMAGE=kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 ;;
+            # 1.26)
+            #   NODE_IMAGE=kindest/node:v1.26.0@sha256:691e24bd2417609db7e589e1a479b902d2e209892a10ce375fab60a8407c7352 ;;
+            esac
+            echo "image=$NODE_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Create KinD cluster
+        uses: helm/kind-action@v1.5.0
+        with:
+          version: v0.17.0
+          node_image: ${{ steps.node_image.outputs.image }}
+
+      - name: Test
+        run: make test-integration
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Lint
+        run: make lint
+        env:
+          LINTER_FLAGS: '--timeout 5m'
+
+  license-check:
+    name: License check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache licenses
+        uses: actions/cache@v3
+        with:
+          key: licensei-v2-${{ hashFiles('go.sum') }}
+          path: |
+            .licensei.cache
+          restore-keys: |
+            licensei-v2
+
+      - name: Download license information for dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make license-cache
+
+      - name: Check licenses
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make license-check

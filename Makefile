@@ -1,5 +1,5 @@
 LICENSEI_VERSION = 0.5.0
-GOLANGCI_VERSION = 1.44.0
+GOLANGCI_VERSION = 1.51.1
 
 all: license fmt vet test
 
@@ -47,4 +47,4 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
-	bin/golangci-lint run
+	bin/golangci-lint run ${LINTER_FLAGS}
