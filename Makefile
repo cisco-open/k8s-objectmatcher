@@ -1,5 +1,5 @@
 LICENSEI_VERSION = 0.5.0
-GOLANGCI_VERSION = 1.44.0
+GOLANGCI_VERSION = 1.51.1
 
 all: license fmt vet test
 
