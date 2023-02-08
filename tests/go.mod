@@ -3,7 +3,7 @@ module github.com/cisco-open/k8s-objectmatcher/tests
 go 1.17
 
 require (
-	emperror.dev/errors v0.8.0
+	emperror.dev/errors v0.8.1
 	github.com/cisco-open/k8s-objectmatcher v0.0.0-00010101000000-000000000000
 	k8s.io/api v0.21.3
 	k8s.io/apiextensions-apiserver v0.21.3
@@ -14,7 +14,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
+	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
