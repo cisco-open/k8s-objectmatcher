@@ -47,4 +47,4 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
-	bin/golangci-lint run $LINTER_FLAGS
+	bin/golangci-lint run ${LINTER_FLAGS}
