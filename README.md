@@ -1,6 +1,7 @@
-![license](http://img.shields.io/badge/license-Apache%20v2-orange.svg)
-
 # Kubernetes object matcher
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/cisco-open/k8s-objectmatcher/ci.yaml?style=flat-square)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/mod/github.com/cisco-open/k8s-objectmatcher)
 
 K8S-ObjectMatcher is a Golang library which helps to match Kubernetes objects.
 
@@ -16,7 +17,7 @@ There is a legacy version of the lib, that is now deprecated and documented here
 
 The library uses the same method that `kubectl apply` does under the hood to calculate a patch using the [three way merge](http://www.drdobbs.com/tools/three-way-merging-a-look-under-the-hood/240164902) method.
 However for this to work properly we need to keep track of the last applied version of our object, let's call it the `original`. Unfortunately Kubernetes does
-not keep track of our previously submitted object versions, but we can put it into an annotation like `kubectl apply` does. 
+not keep track of our previously submitted object versions, but we can put it into an annotation like `kubectl apply` does.
 Next time we query the `current` state of the object from the API Server we can extract the `original` version from the annotation.
 
 Once we have the the `original`, the `current` and our new `modified` object in place the library will take care of the rest.
@@ -72,7 +73,7 @@ Example:
 	opts := []patch.CalculateOption{
 		patch.IgnoreStatusFields(),
 	}
-	
+
 	patchResult, err := patch.DefaultPatchMaker.Calculate(existing.(runtime.Object), newObject.(runtime.Object), opts...)
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ This CalculateOption clears volumeClaimTemplate fields from both objects before 
 
 #### IgnorePdbSelector
 
-Checks `selector` fields of PDB objects before comparing and removes them if they match. `reflect.DeepEquals` is used for the equality check. 
+Checks `selector` fields of PDB objects before comparing and removes them if they match. `reflect.DeepEquals` is used for the equality check.
 This is required because map fields using `patchStrategy:"replace"` will always diff regardless if they are otherwise equal.
 
 #### IgnoreField("field-name-to-ignore")
