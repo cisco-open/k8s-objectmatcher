@@ -770,6 +770,25 @@ func TestIntegration(t *testing.T) {
 					},
 				},
 			}),
+		NewTestMatch("pvc match for volumemode",
+			&v1.PersistentVolumeClaim{
+				ObjectMeta: standardObjectMeta(),
+				Spec: v1.PersistentVolumeClaimSpec{
+					AccessModes: []v1.PersistentVolumeAccessMode{
+						v1.ReadWriteOnce,
+					},
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							"storage": resource.MustParse("1G"),
+						},
+					},
+				},
+			}).withRemoteChange(
+			func(i interface{}) {
+				pvc := i.(*v1.PersistentVolumeClaim)
+				a := v1.PersistentVolumeFilesystem
+				pvc.Spec.VolumeMode = &a
+			}),
 		NewTestMatch("unstructured match", &unstructured.Unstructured{
 			Object: map[string]interface{}{
 				"metadata": map[string]interface{}{
