@@ -22,7 +22,7 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Test
         run: make test
@@ -45,7 +45,7 @@ jobs:
           go-version: '1.20'
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # See https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
       - name: Determine KinD node image version
@@ -92,7 +92,7 @@ jobs:
           go-version: '1.20'
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Lint
         run: make lint
@@ -110,7 +110,7 @@ jobs:
           go-version: '1.20'
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache licenses
         uses: actions/cache@v3
