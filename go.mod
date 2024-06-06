@@ -1,6 +1,6 @@
 module github.com/cisco-open/k8s-objectmatcher
 
-go 1.17
+go 1.22.0
 
 require (
 	emperror.dev/errors v0.8.1
