@@ -4,9 +4,9 @@ go 1.17
 
 require (
 	emperror.dev/errors v0.8.1
-	github.com/evanphx/json-patch v5.6.0+incompatible
+	github.com/evanphx/json-patch v5.9.0+incompatible
 	github.com/json-iterator/go v1.1.12
-	k8s.io/apimachinery v0.19.2
+	k8s.io/apimachinery v0.19.16
 )
 
 require (
@@ -28,6 +28,6 @@ require (
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	k8s.io/klog/v2 v2.2.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200805222855-6aeccd4b50c6 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.0.1 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
