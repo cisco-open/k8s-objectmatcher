@@ -23,16 +23,13 @@ import (
 	"testing"
 
 	"emperror.dev/errors"
-	"github.com/cisco-open/k8s-objectmatcher/patch"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/autoscaling/v2beta1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	crdv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,6 +38,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
+
+	"github.com/cisco-open/k8s-objectmatcher/patch"
 )
 
 var (
@@ -196,7 +195,6 @@ func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 	opts := []patch.CalculateOption{
 		patch.IgnoreStatusFields(),
 		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
-		patch.IgnorePDBSelector(),
 		patch.IgnoreField(ignoreField),
 	}
 
@@ -332,13 +330,13 @@ func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
 		}()
-	case *v2beta1.HorizontalPodAutoscaler:
-		existing, err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(context.Background(), newObject.(*v2beta1.HorizontalPodAutoscaler), metav1.CreateOptions{})
+	case *autoscalingv1.HorizontalPodAutoscaler:
+		existing, err = testContext.Client.AutoscalingV1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(context.Background(), newObject.(*autoscalingv1.HorizontalPodAutoscaler), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
+			err = testContext.Client.AutoscalingV1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
@@ -354,22 +352,6 @@ func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
 		}()
-	case *policyv1beta1.PodDisruptionBudget:
-		existing, err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Create(context.Background(), newObject.(*policyv1beta1.PodDisruptionBudget), metav1.CreateOptions{})
-		if err != nil {
-			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
-		}
-		defer func() {
-			err = testContext.Client.PolicyV1beta1().PodDisruptionBudgets(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
-			if err != nil {
-				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
-			}
-		}()
-		// In case of PodDisruptionBudget resources `patchStrategy:"replace"` results in a constant diff from kubernetes version 1.21
-		// The IgnorePDBSelector CalculateOption can only help in this situation if either the current or modified object contains gvk information, this is why it's set here explicitly
-		te, _ := meta.TypeAccessor(existing)
-		te.SetKind("PodDisruptionBudget")
-		te.SetAPIVersion("policy/v1beta1")
 	case *v1.PersistentVolumeClaim:
 		existing, err = testContext.Client.CoreV1().PersistentVolumeClaims(newObject.GetNamespace()).Create(context.Background(), newObject.(*v1.PersistentVolumeClaim), metav1.CreateOptions{})
 		if err != nil {

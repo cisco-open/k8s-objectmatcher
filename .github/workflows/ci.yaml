@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.18", "1.19", "1.20"]
+        go: ["1.22"]
 
     steps:
       - name: Set up Go
@@ -33,8 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        kube: ["1.19", "1.20", "1.21", "1.22", "1.23", "1.24"]
-        # kube: ["1.19", "1.20", "1.21", "1.22", "1.23", "1.24", "1.25", "1.26"]
+        kube: ["1.25", "1.26", "1.27", "1.28", "1.29", "1.30"]
     env:
       KUBECONFIG: ${{ github.workspace }}/.kube/config
 
@@ -42,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,23 +51,18 @@ jobs:
         id: node_image
         run: |
           case ${{ matrix.kube }} in
-            1.19)
-              NODE_IMAGE=kindest/node:v1.19.16@sha256:476cb3269232888437b61deca013832fee41f9f074f9bed79f57e4280f7c48b7 ;;
-            1.20)
-              NODE_IMAGE=kindest/node:v1.20.15@sha256:a32bf55309294120616886b5338f95dd98a2f7231519c7dedcec32ba29699394 ;;
-            1.21)
-              NODE_IMAGE=kindest/node:v1.21.14@sha256:9d9eb5fb26b4fbc0c6d95fa8c790414f9750dd583f5d7cee45d92e8c26670aa1 ;;
-            1.22)
-              NODE_IMAGE=kindest/node:v1.22.15@sha256:7d9708c4b0873f0fe2e171e2b1b7f45ae89482617778c1c875f1053d4cef2e41 ;;
-            1.23)
-              NODE_IMAGE=kindest/node:v1.23.13@sha256:ef453bb7c79f0e3caba88d2067d4196f427794086a7d0df8df4f019d5e336b61 ;;
-            1.24)
-              NODE_IMAGE=kindest/node:v1.24.7@sha256:577c630ce8e509131eab1aea12c022190978dd2f745aac5eb1fe65c0807eb315 ;;
-            # Integration tests don't pass on these versions due to API incompatibilities
-            # 1.25)
-            #   NODE_IMAGE=kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 ;;
-            # 1.26)
-            #   NODE_IMAGE=kindest/node:v1.26.0@sha256:691e24bd2417609db7e589e1a479b902d2e209892a10ce375fab60a8407c7352 ;;
+            1.25)
+              NODE_IMAGE=kindest/node:v1.25.11@sha256:227fa11ce74ea76a0474eeefb84cb75d8dad1b08638371ecf0e86259b35be0c8 ;;
+            1.26)
+              NODE_IMAGE=kindest/node:v1.26.6@sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb ;;
+            1.27)
+              NODE_IMAGE=kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72 ;;
+            1.28)
+              NODE_IMAGE=kindest/node:v1.28.9@sha256:9ba4d311e7861d27b210e5960e5ce921a7c53d3c67e0545fd8a1cb9a76dfa2cb ;;
+            1.29)
+              NODE_IMAGE=kindest/node:v1.29.4@sha256:ea40a6bd365a17f71fd3883a1d34a0791d7d6b0eb75832c6d85b6f2326827f1e ;;
+            1.30)
+              NODE_IMAGE=kindest/node:v1.30.0@sha256:2af5d1b382926abcd6336312d652cd045b7cc47475844a608669c71b1fefcfbc ;;
             esac
             echo "image=$NODE_IMAGE" >> $GITHUB_OUTPUT
 
@@ -89,7 +83,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -107,7 +101,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
 
       - name: Checkout code
         uses: actions/checkout@v4
