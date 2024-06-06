@@ -22,7 +22,7 @@ import (
 	"emperror.dev/errors"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/autoscaling/v2beta1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	crdv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -657,10 +657,10 @@ func TestIntegration(t *testing.T) {
 				pod.Spec.Replicas = &replicas
 			}),
 		NewTestMatch("hpa match",
-			&v2beta1.HorizontalPodAutoscaler{
+			&autoscalingv1.HorizontalPodAutoscaler{
 				ObjectMeta: standardObjectMeta(),
-				Spec: v2beta1.HorizontalPodAutoscalerSpec{
-					ScaleTargetRef: v2beta1.CrossVersionObjectReference{
+				Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
+					ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
 						Kind:       "Deployment",
 						Name:       "test",
 						APIVersion: "apps/v1",

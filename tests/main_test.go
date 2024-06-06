@@ -25,7 +25,7 @@ import (
 	"emperror.dev/errors"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/autoscaling/v2beta1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	crdv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -330,13 +330,13 @@ func testMatchOnObject(testItem *TestItem, ignoreField string) error {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
 		}()
-	case *v2beta1.HorizontalPodAutoscaler:
-		existing, err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(context.Background(), newObject.(*v2beta1.HorizontalPodAutoscaler), metav1.CreateOptions{})
+	case *autoscalingv1.HorizontalPodAutoscaler:
+		existing, err = testContext.Client.AutoscalingV1().HorizontalPodAutoscalers(newObject.GetNamespace()).Create(context.Background(), newObject.(*autoscalingv1.HorizontalPodAutoscaler), metav1.CreateOptions{})
 		if err != nil {
 			return errors.WrapWithDetails(err, "failed to create object", "object", newObject)
 		}
 		defer func() {
-			err = testContext.Client.AutoscalingV2beta1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
+			err = testContext.Client.AutoscalingV1().HorizontalPodAutoscalers(newObject.GetNamespace()).Delete(context.Background(), existing.GetName(), deleteOptions)
 			if err != nil {
 				log.Printf("Failed to remove object %s %+v", existing.GetName(), err)
 			}
