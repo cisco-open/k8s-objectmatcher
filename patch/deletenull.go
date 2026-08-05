@@ -234,6 +234,7 @@ func deleteVolumeClaimTemplateFields(obj []byte) ([]byte, error) {
 						if vct, ok := vct.(map[string]interface{}); ok {
 							vct["kind"] = ""
 							vct["apiVersion"] = ""
+							vct["metadata"] = map[string]interface{}{}
 							vct["status"] = map[string]string{
 								"phase": "Pending",
 							}
